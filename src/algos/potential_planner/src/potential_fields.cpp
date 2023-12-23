@@ -15,9 +15,9 @@
 using std::placeholders::_1;
 
 
-double k1 = 0.004 * 14;
-double k2 = 0.006 * 14;
-double k3 = 0.008 * 14;
+double k1 = 0.004 * 3.8;
+double k2 = 0.006 * 3.8;
+double k3 = 0.008 * 3.8;
 double rmax1 = 3.8;
 double rmax2 = 3.5;
 double rmax3 = 3.2;
@@ -106,7 +106,7 @@ class FieldsNode : public rclcpp::Node
         RCLCPP_INFO_STREAM(this->get_logger(), "Topic = " << topic);
         laser_scan_sub = this->create_subscription<sensor_msgs::msg::LaserScan>(topic, 100, std::bind(&FieldsNode::laser_scan_cb, this, _1));
         pose_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>(local_namespace + "/pose", 100, std::bind(&FieldsNode::pose_sub_cb, this, _1));
-        field_vel_pub = this->create_publisher<geometry_msgs::msg::TwistStamped>(local_namespace + "/cmd_vel", 10);
+        field_vel_pub = this->create_publisher<geometry_msgs::msg::TwistStamped>(local_namespace + "/potential_fields/force", 10);
     }
 
 
@@ -184,7 +184,7 @@ class FieldsNode : public rclcpp::Node
         double tmpy = twist.twist.linear.y;
 
         // twist.twist.linear.x = tmpx * cos(angles.yaw) - tmpy * sin(angles.yaw);
-        twist.twist.linear.y = 0;
+        // twist.twist.linear.y = 0;
         twist.twist.angular.z = tmpy;
 
         RCLCPP_INFO_STREAM(this->get_logger(), "twist.twist.linear.x: " << twist.twist.linear.x << "twist.twist.linear.y: " << twist.twist.linear.y << "");

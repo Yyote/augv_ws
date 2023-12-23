@@ -9,11 +9,15 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(augv_navigation_msgs REQUIRED)
+find_package(euler_angles_lib REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
-set(deps ament_cmake rclcpp geometry_msgs)
+set(deps ament_cmake rclcpp geometry_msgs augv_navigation_msgs euler_angles_lib)
 
 
 
@@ -31,7 +35,7 @@ set(ament_cmake_cpplint_FOUND TRUE)
 ament_lint_auto_find_test_dependencies()
 endif()
 
-set(SOURCE_FILES_LIST include/regulators/regulators.hpp src/regulators.cpp)
+set(SOURCE_FILES_LIST include/regulators_lib/regulators.hpp src/regulators.cpp)
 
 add_library(${PROJECT_NAME} ${SOURCE_FILES_LIST})
 ament_target_dependencies(${PROJECT_NAME} ${deps})

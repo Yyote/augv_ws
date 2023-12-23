@@ -327,7 +327,7 @@ class GlobalPlanner(Node):
         # self.consider_unfound_area_flag = rclpy.get_param('consider_unfound_area_flag', False)
         self.consider_unfound_area_flag = False
 
-        self.map_sub = self.create_subscription(OccupancyGrid, "/map", self.map_clb, qos_profile=10)
+        self.map_sub = self.create_subscription(OccupancyGrid, "/OccupancyGrid_map", self.map_clb, qos_profile=10)
         self.pose_sub = self.create_subscription(PoseStamped, "/pose", self.robot_pose_clb, qos_profile=10)
 
         # # Паблишер миссии
