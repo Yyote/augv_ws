@@ -8,6 +8,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
+#include "visualization_msgs/msg/marker.hpp"
 #include "augv_navigation_msgs/msg/position.hpp"
 #include "euler_angles_lib/euler_angles.hpp"
 
@@ -15,31 +16,49 @@ using namespace std::chrono_literals;
 using std::placeholders::_1;
 
 
-class Regulator : public rclcpp::Node
+class GroundRegulator;
+class PID;
+
+
+
+/**
+* @brief Базовый класс для реализации регуляторов
+* @param id Идентификационный номер ноды, показывающий, какому роботу регулятор принадлежит. По-умолчанию - 1
+*/
+class GroundRegulator : public rclcpp::Node
 {
     public:
-    Regulator()
+    GroundRegulator()
     : Node("regulator") // инициалзация полей
     {
-        std::string defualt_robot_ns = "/robot1";
+        int default_id = 1;
+        int id = default_id;
+        this->declare_parameter("id", default_id);
+        this->get_parameter_or("id", id, default_id);
+
+        id_ = id;
+
+        std::string defualt_robot_ns = "/robot" + std::to_string(id);
         this->declare_parameter("robot_ns", defualt_robot_ns);
         this->get_parameter_or("robot_ns", robot_ns, defualt_robot_ns);
 
         std::string pose_topic = robot_ns + "/pose";
-        pose_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>(pose_topic, 10, std::bind(&Regulator::pose_cb, this, _1)); 
+        pose_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>(pose_topic, 10, std::bind(&GroundRegulator::pose_cb, this, _1)); 
         std::string goal_topic = robot_ns + "/goal";
-        goal_sub = this->create_subscription<augv_navigation_msgs::msg::Position>(goal_topic, 10, std::bind(&Regulator::goal_cb, this, _1)); 
+        goal_sub = this->create_subscription<augv_navigation_msgs::msg::Position>(goal_topic, 10, std::bind(&GroundRegulator::goal_cb, this, _1)); 
         std::string cmd_vel_topic = robot_ns + "/cmd_vel";
         cmd_vel_pub = this->create_publisher<geometry_msgs::msg::TwistStamped>(cmd_vel_topic, 10);
+        arrow_pub = this->create_publisher<visualization_msgs::msg::Marker>("/robot" + std::to_string(this->id_) + "/goal_arrow", 10);
     }
 
     private:
-    rclcpp::Time last_time;
-    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub;
-    rclcpp::Subscription<augv_navigation_msgs::msg::Position>::SharedPtr goal_sub;
+    rclcpp::Time last_time; // regulators.hpp::GroundRegulator
+    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub; // regulators.hpp::GroundRegulator
+    rclcpp::Subscription<augv_navigation_msgs::msg::Position>::SharedPtr goal_sub; // regulators.hpp::GroundRegulator
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr arrow_pub;
 
 
-    virtual void logic(float rotation_diff, float dx, float dy, float dz, float dt, float curr_orientation) = 0;
+    virtual void logic(float yaw_singal, float x_signal, float y_signal, float z_signal) = 0;
 
 
     void pose_cb(const geometry_msgs::msg::PoseStamped::SharedPtr pose_msg)
@@ -50,17 +69,49 @@ class Regulator : public rclcpp::Node
         if (got_goal_at_least_once)
         {
             ea.get_RPY_from_msg_quaternion(pose_msg->pose.orientation);
-            float rotation_diff = current_goal.course - ea.yaw();
+            // float dyaw = current_goal.course - ea.yaw();
             float dx = current_goal.position.x - pose_msg->pose.position.x;
             float dy = current_goal.position.y - pose_msg->pose.position.y;
             float dz = current_goal.position.z - pose_msg->pose.position.z;
+
+            auto xy = ea.rotate_vector_by_angle(dx, dy, -curr_orientation);
+            dx = xy.at(0);
+            dy = xy.at(1);
+
+            float dyaw = atan2(dy, dx);
 
             // auto xy = ea.rotate_vector_by_angle(dx, dy, curr_orientation);
             // dx = xy[0];
             // dy = xy[1];
 
             float dt = (now - last_time).nanoseconds() / 1e9;
-            logic(rotation_diff, dx, dy, dz, dt, ea.yaw());
+
+            ea.setRPY(0, 0, dyaw);
+
+            visualization_msgs::msg::Marker dmarker;
+            dmarker.header.frame_id = "robot" + std::to_string(this->id_) + "/base_link";
+            dmarker.header.stamp = this->get_clock()->now();
+            dmarker.id = 0;
+            dmarker.type = visualization_msgs::msg::Marker::ARROW;
+            dmarker.action = visualization_msgs::msg::Marker::ADD;
+            dmarker.pose.position.x = 0;
+            dmarker.pose.position.y = 0;
+            dmarker.pose.position.z = 0;
+            dmarker.pose.orientation = ea.get_current_msg_quaternion();
+            dmarker.scale.x = 1;
+            dmarker.scale.y = 0.1;
+            dmarker.scale.z = 0.1;
+            dmarker.color.a = 1.0; // Don't forget to set the alpha!
+            dmarker.color.r = 0.0;
+            dmarker.color.g = 1.0;
+            dmarker.color.b = 0.0;
+            arrow_pub->publish(dmarker);
+
+            float x_sig = x_regulator.pid(dx, dt);
+            float y_sig = y_regulator.pid(dy, dt);
+            float z_sig = z_regulator.pid(dz, dt);
+            float yaw_sig = yaw_regulator.pid(dyaw, dt);
+            logic(yaw_sig, x_sig, y_sig, z_sig);
         }
         last_time = now;
     }
@@ -75,39 +126,84 @@ class Regulator : public rclcpp::Node
         // current_goal.position.y = xy.at(1);
 
         got_goal_at_least_once = true;
-        rot_integr = 0;
-        x_integr = 0;
-        y_integr = 0;
 
-        rot_diff = 0;
-        x_diff = 0;
-        y_diff = 0;
-
-        rot_errs.clear();
-        x_errs.clear();
-        y_errs.clear();
+        x_regulator.clear();
+        y_regulator.clear();
+        z_regulator.clear();
+        yaw_regulator.clear();
     }
 
     protected:
-    std::string robot_ns;
-    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr cmd_vel_pub;
-    augv_navigation_msgs::msg::Position current_goal;
-    bool got_goal_at_least_once = false;
-    std::vector<float> rot_errs;
-    std::vector<float> x_errs;
-    std::vector<float> y_errs;
+    int  id_; // regulators.hpp::GroundRegulator
+    std::string robot_ns; // regulators.hpp::GroundRegulator
+    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr cmd_vel_pub; // regulators.hpp::GroundRegulator
+    augv_navigation_msgs::msg::Position current_goal; // regulators.hpp::GroundRegulator
+    bool got_goal_at_least_once = false; // regulators.hpp::GroundRegulator
+    std::vector<float> rot_errs; // regulators.hpp::GroundRegulator
+    std::vector<float> x_errs; // regulators.hpp::GroundRegulator
+    std::vector<float> y_errs; // regulators.hpp::GroundRegulator
 
-    float rot_integr;
-    float x_integr;
-    float y_integr;
-
-    float rot_diff;
-    float x_diff;
-    float y_diff;
-
-    float kp;
-    float kd;
-    float ki;
+    PID x_regulator;
+    PID y_regulator;
+    PID z_regulator;
+    PID yaw_regulator;
 
     float curr_orientation;
+};
+
+
+class PID
+{
+    public:
+    PID(float kp, float ki, float kd)
+    {
+        this->kp = kp;
+        this->ki = ki;
+        this->kd = kd;
+    }
+
+
+    /**
+    * @brief Main logic function. Use it to use regulation
+    * @param dx the regulated signal error (goal - real)
+    * @param dt time difference between current and previous measurements
+    */
+    float pid(float dx, float dt)
+    {
+        error_vector.push_back(dx);
+        float signal = kp * dx;
+
+        if (error_vector.size() > 1)
+        {
+            integral += dx * dt;
+            derivative = (dx - error_vector.at(error_vector.size() - 1)) / dt;
+            signal = kp * dx + ki * integral + kd * derivative;
+
+            if (error_vector.size() > 2) error_vector.erase(error_vector.begin()); // as there doesn't need to be more than two elements, delete the old ones
+        }
+
+        return signal;
+    }
+
+
+    /**
+    * @brief Equalizes the integral and derivative calculated before to zero and clears the error vector
+    */
+    float clear()
+    {
+        integral = 0;
+        derivative = 0;
+        error_vector.clear();
+    }
+
+
+    private:
+    float kp;
+    float ki;
+    float kd;
+
+    float integral;
+    float derivative;
+
+    std::vector<float> error_vector;
 };

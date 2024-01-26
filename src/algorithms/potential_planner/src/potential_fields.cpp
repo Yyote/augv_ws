@@ -11,13 +11,13 @@
 #include "sensor_msgs/msg/point_cloud.hpp"
 #include "tf2/LinearMath/Matrix3x3.h"
 #include "tf2/LinearMath/Quaternion.h"
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 using std::placeholders::_1;
 
 
-double k1 = 0.004 * 3.8;
-double k2 = 0.006 * 3.8;
-double k3 = 0.008 * 3.8;
+double k1 = 0.006 * 3.8;
+double k2 = 0.008 * 3.8;
+double k3 = 0.010 * 3.8;
 double rmax1 = 3.8;
 double rmax2 = 3.5;
 double rmax3 = 3.2;
@@ -111,7 +111,7 @@ class FieldsNode : public rclcpp::Node
 
 
     private:
-    void laser_scan_cb(const sensor_msgs::msg::LaserScan::ConstPtr &scan)
+    void laser_scan_cb(const sensor_msgs::msg::LaserScan::SharedPtr scan)
     {
         sensor_msgs::msg::PointCloud pc;
 
@@ -194,7 +194,7 @@ class FieldsNode : public rclcpp::Node
 
 
 
-    void pose_sub_cb(const geometry_msgs::msg::PoseStamped::ConstPtr &pose)
+    void pose_sub_cb(const geometry_msgs::msg::PoseStamped::SharedPtr pose)
     {
         curr_pose = *pose;
     }

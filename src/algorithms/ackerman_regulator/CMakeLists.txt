@@ -38,10 +38,10 @@ add_executable(ackerman_regulator_node src/ackerman_regulator.cpp)
 target_link_libraries(ackerman_regulator_node regulators_lib::regulators_lib euler_angles_lib::euler_angles)
 ament_target_dependencies(ackerman_regulator_node ${deps})
 
-install(
-  DIRECTORY include/${PROJECT_NAME}
-  DESTINATION include
-)
+# install(
+#   DIRECTORY include/${PROJECT_NAME}
+#   DESTINATION include
+# )
 
 install(
   TARGETS ackerman_regulator_node
