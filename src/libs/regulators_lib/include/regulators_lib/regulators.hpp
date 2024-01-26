@@ -40,17 +40,19 @@ class PID
     */
     float pid(float dx, float dt)
     {
-        error_vector.push_back(dx);
         float signal = kp * dx;
 
         if (error_vector.size() > 1)
         {
             integral += dx * dt;
-            derivative = (dx - error_vector.at(error_vector.size() - 1)) / dt;
+            derivative = -(dx - error_vector.at(error_vector.size() - 1)) / dt;
             signal = kp * dx + ki * integral + kd * derivative;
 
             if (error_vector.size() > 2) error_vector.erase(error_vector.begin()); // as there doesn't need to be more than two elements, delete the old ones
         }
+
+        // _status(dx);
+        error_vector.push_back(dx);
 
         return signal;
     }
@@ -76,6 +78,18 @@ class PID
     float derivative = 0;
 
     std::vector<float> error_vector;
+
+
+    void _status(float signal)
+    {
+        std::cout   << "ki = " << ki << "\n"
+                    << "kp = " << kp << "\n"
+                    << "kd = " << kd << "\n"
+                    << "integral = " << integral << "\n"
+                    << "derivative = " << derivative << "\n"
+                    << "signal = " << signal << "\n"
+                    << "error_vector.size() = " << error_vector.size() << "\n";
+    }
 };
 
 /**
@@ -86,7 +100,7 @@ class GroundRegulator : public rclcpp::Node
 {
     public:
     GroundRegulator()
-    : Node("regulator"), x_regulator(1, 0.02, 0.5), y_regulator(1, 0.02, 0.5), z_regulator(1, 0.02, 0.5), yaw_regulator(1, 0.02, 0.5) // инициалзация полей
+    : Node("regulator"), x_regulator(0.8, 0.015, 0.5), y_regulator(1, 0.02, 0.5), z_regulator(1, 0.02, 0.5), yaw_regulator(0.45, 0.002, 0.2) // инициалзация полей
     {
         int default_id = 1;
         int id = default_id;
@@ -122,11 +136,12 @@ class GroundRegulator : public rclcpp::Node
     {
         rclcpp::Time now = this->get_clock()->now();
         EulerAngles ea;
-        curr_orientation = ea.yaw();
+        // curr_orientation = ea.yaw();
         if (got_goal_at_least_once)
         {
             ea.get_RPY_from_msg_quaternion(pose_msg->pose.orientation);
-            // float dyaw = current_goal.course - ea.yaw();
+            curr_orientation = ea.yaw();
+            float dyaw = current_goal.course - ea.yaw();
             float dx = current_goal.position.x - pose_msg->pose.position.x;
             float dy = current_goal.position.y - pose_msg->pose.position.y;
             float dz = current_goal.position.z - pose_msg->pose.position.z;
@@ -135,7 +150,10 @@ class GroundRegulator : public rclcpp::Node
             dx = xy.at(0);
             dy = xy.at(1);
 
-            float dyaw = atan2(dy, dx);
+            // float dyaw = atan2(dy, dx);
+            dyaw = atan2f(dy, dx);
+            // dyaw = ea.normalize_angle(dyaw);
+            RCLCPP_WARN_STREAM(this->get_logger(), "DYAW = " << dyaw);
 
             // auto xy = ea.rotate_vector_by_angle(dx, dy, curr_orientation);
             // dx = xy[0];
@@ -163,6 +181,11 @@ class GroundRegulator : public rclcpp::Node
             dmarker.color.g = 1.0;
             dmarker.color.b = 0.0;
             arrow_pub->publish(dmarker);
+
+            // std::cout   << "dx = " << dx << "\n"
+            //             << "dy = " << dy << "\n"
+            //             << "dz = " << dz << "\n"
+            //             << "dyaw = " << dyaw << "\n";
 
             float x_sig = x_regulator.pid(dx, dt);
             float y_sig = y_regulator.pid(dy, dt);
