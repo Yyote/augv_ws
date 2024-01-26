@@ -21,6 +21,63 @@ class PID;
 
 
 
+
+class PID
+{
+    public:
+    PID(float kp, float ki, float kd)
+    {
+        this->kp = kp;
+        this->ki = ki;
+        this->kd = kd;
+    }
+
+
+    /**
+    * @brief Main logic function. Use it to use regulation
+    * @param dx the regulated signal error (goal - real)
+    * @param dt time difference between current and previous measurements
+    */
+    float pid(float dx, float dt)
+    {
+        error_vector.push_back(dx);
+        float signal = kp * dx;
+
+        if (error_vector.size() > 1)
+        {
+            integral += dx * dt;
+            derivative = (dx - error_vector.at(error_vector.size() - 1)) / dt;
+            signal = kp * dx + ki * integral + kd * derivative;
+
+            if (error_vector.size() > 2) error_vector.erase(error_vector.begin()); // as there doesn't need to be more than two elements, delete the old ones
+        }
+
+        return signal;
+    }
+
+
+    /**
+    * @brief Equalizes the integral and derivative calculated before to zero and clears the error vector
+    */
+    float clear()
+    {
+        integral = 0;
+        derivative = 0;
+        error_vector.clear();
+    }
+
+
+    private:
+    float kp;
+    float ki;
+    float kd;
+
+    float integral = 0;
+    float derivative = 0;
+
+    std::vector<float> error_vector;
+};
+
 /**
 * @brief Базовый класс для реализации регуляторов
 * @param id Идентификационный номер ноды, показывающий, какому роботу регулятор принадлежит. По-умолчанию - 1
@@ -29,7 +86,7 @@ class GroundRegulator : public rclcpp::Node
 {
     public:
     GroundRegulator()
-    : Node("regulator") // инициалзация полей
+    : Node("regulator"), x_regulator(1, 0.02, 0.5), y_regulator(1, 0.02, 0.5), z_regulator(1, 0.02, 0.5), yaw_regulator(1, 0.02, 0.5) // инициалзация полей
     {
         int default_id = 1;
         int id = default_id;
@@ -151,59 +208,3 @@ class GroundRegulator : public rclcpp::Node
     float curr_orientation;
 };
 
-
-class PID
-{
-    public:
-    PID(float kp, float ki, float kd)
-    {
-        this->kp = kp;
-        this->ki = ki;
-        this->kd = kd;
-    }
-
-
-    /**
-    * @brief Main logic function. Use it to use regulation
-    * @param dx the regulated signal error (goal - real)
-    * @param dt time difference between current and previous measurements
-    */
-    float pid(float dx, float dt)
-    {
-        error_vector.push_back(dx);
-        float signal = kp * dx;
-
-        if (error_vector.size() > 1)
-        {
-            integral += dx * dt;
-            derivative = (dx - error_vector.at(error_vector.size() - 1)) / dt;
-            signal = kp * dx + ki * integral + kd * derivative;
-
-            if (error_vector.size() > 2) error_vector.erase(error_vector.begin()); // as there doesn't need to be more than two elements, delete the old ones
-        }
-
-        return signal;
-    }
-
-
-    /**
-    * @brief Equalizes the integral and derivative calculated before to zero and clears the error vector
-    */
-    float clear()
-    {
-        integral = 0;
-        derivative = 0;
-        error_vector.clear();
-    }
-
-
-    private:
-    float kp;
-    float ki;
-    float kd;
-
-    float integral;
-    float derivative;
-
-    std::vector<float> error_vector;
-};
