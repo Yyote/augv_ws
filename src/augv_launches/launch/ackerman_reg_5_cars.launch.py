@@ -11,8 +11,8 @@ def generate_launch_description():
             launch_ros.actions.Node(
                 package="augv_regulators", 
                 # executable="tracked_regulator_node",
-                # executable="ackerman_regulator_node",
-                executable="omni_regulator_node",
+                executable="ackerman_regulator_node",
+                # executable="omni_regulator_node",
                 namespace=f"robot{i}",
                 parameters=[
                     {'id': i},
