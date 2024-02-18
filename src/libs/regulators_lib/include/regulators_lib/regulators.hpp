@@ -100,7 +100,7 @@ class GroundRegulator : public rclcpp::Node
 {
     public:
     GroundRegulator()
-    : Node("regulator"), x_regulator(0.8, 0.015, 0.5), y_regulator(1, 0.02, 0.5), z_regulator(1, 0.02, 0.5), yaw_regulator(0.45, 0.002, 0.2) // инициалзация полей
+    : Node("regulator"), x_regulator(0.8, 0.015, 0.5), y_regulator(0.8, 0.015, 0.5), z_regulator(1, 0.02, 0.5), yaw_regulator(0.45, 0.002, 0.2) // инициалзация полей
     {
         int default_id = 1;
         int id = default_id;
@@ -123,16 +123,14 @@ class GroundRegulator : public rclcpp::Node
     }
 
     private:
-    rclcpp::Time last_time; // regulators.hpp::GroundRegulator
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub; // regulators.hpp::GroundRegulator
     rclcpp::Subscription<augv_navigation_msgs::msg::Position>::SharedPtr goal_sub; // regulators.hpp::GroundRegulator
-    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr arrow_pub;
 
 
     virtual void logic(float yaw_singal, float x_signal, float y_signal, float z_signal) = 0;
 
 
-    void pose_cb(const geometry_msgs::msg::PoseStamped::SharedPtr pose_msg)
+    virtual void pose_cb(const geometry_msgs::msg::PoseStamped::SharedPtr pose_msg)
     {
         rclcpp::Time now = this->get_clock()->now();
         EulerAngles ea;
@@ -214,9 +212,11 @@ class GroundRegulator : public rclcpp::Node
     }
 
     protected:
+    rclcpp::Time last_time; // regulators.hpp::GroundRegulator
     int  id_; // regulators.hpp::GroundRegulator
     std::string robot_ns; // regulators.hpp::GroundRegulator
     rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr cmd_vel_pub; // regulators.hpp::GroundRegulator
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr arrow_pub;
     augv_navigation_msgs::msg::Position current_goal; // regulators.hpp::GroundRegulator
     bool got_goal_at_least_once = false; // regulators.hpp::GroundRegulator
     std::vector<float> rot_errs; // regulators.hpp::GroundRegulator

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(ackerman_regulator)
+project(augv_regulators)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -38,11 +38,6 @@ add_executable(ackerman_regulator_node src/ackerman_regulator.cpp)
 target_link_libraries(ackerman_regulator_node regulators_lib::regulators_lib euler_angles_lib::euler_angles)
 ament_target_dependencies(ackerman_regulator_node ${deps})
 
-# install(
-#   DIRECTORY include/${PROJECT_NAME}
-#   DESTINATION include
-# )
-
 install(
   TARGETS ackerman_regulator_node
   EXPORT ackerman_regulator_node
@@ -57,5 +52,44 @@ DESTINATION lib/${PROJECT_NAME}/)
 
 ament_export_targets(ackerman_regulator_node HAS_LIBRARY_TARGET)
 
+
+
+add_executable(tracked_regulator_node src/tracked_regulator.cpp) 
+target_link_libraries(tracked_regulator_node regulators_lib::regulators_lib euler_angles_lib::euler_angles)
+ament_target_dependencies(tracked_regulator_node ${deps})
+
+install(
+  TARGETS tracked_regulator_node
+  EXPORT tracked_regulator_node
+  LIBRARY DESTINATION ${COLCON_PACKAGE_LIB_DESTINATION}
+  ARCHIVE DESTINATION ${COLCON_GLOBAL_LIB_DESTINATION}
+  RUNTIME DESTINATION  ${COLCON_GLOBAL_LIB_DESTINATION}
+  INCLUDES DESTINATION include
+)
+
+install(TARGETS tracked_regulator_node
+DESTINATION lib/${PROJECT_NAME}/)
+
+ament_export_targets(tracked_regulator_node HAS_LIBRARY_TARGET)
+
+
+
+add_executable(omni_regulator_node src/omni_regulator.cpp) 
+target_link_libraries(omni_regulator_node regulators_lib::regulators_lib euler_angles_lib::euler_angles)
+ament_target_dependencies(omni_regulator_node ${deps})
+
+install(
+  TARGETS omni_regulator_node
+  EXPORT omni_regulator_node
+  LIBRARY DESTINATION ${COLCON_PACKAGE_LIB_DESTINATION}
+  ARCHIVE DESTINATION ${COLCON_GLOBAL_LIB_DESTINATION}
+  RUNTIME DESTINATION  ${COLCON_GLOBAL_LIB_DESTINATION}
+  INCLUDES DESTINATION include
+)
+
+install(TARGETS omni_regulator_node
+DESTINATION lib/${PROJECT_NAME}/)
+
+ament_export_targets(omni_regulator_node HAS_LIBRARY_TARGET)
 
 ament_package()

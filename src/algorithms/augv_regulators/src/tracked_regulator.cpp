@@ -3,13 +3,13 @@
 #include "augv_navigation_msgs/msg/position.hpp"
 
 
-class AckermanRegulator : public GroundRegulator
+class TrackedRegulator : public GroundRegulator
 {
     public:
-    AckermanRegulator()
+    TrackedRegulator()
     {
-        rviz_goal_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>("/goal_pose", 10, std::bind(&AckermanRegulator::goal_sub_cb, this, std::placeholders::_1));
-        potential_sub = this->create_subscription<geometry_msgs::msg::TwistStamped>(this->robot_ns + "/potential_fields/force", 10, std::bind(&AckermanRegulator::potential_cb, this, std::placeholders::_1));
+        rviz_goal_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>("/goal_pose", 10, std::bind(&TrackedRegulator::goal_sub_cb, this, std::placeholders::_1));
+        potential_sub = this->create_subscription<geometry_msgs::msg::TwistStamped>(this->robot_ns + "/potential_fields/force", 10, std::bind(&TrackedRegulator::potential_cb, this, std::placeholders::_1));
         goal_pub = this->create_publisher<augv_navigation_msgs::msg::Position>("/robot" + std::to_string(this->id_) + "/goal", 10);
     }
 
@@ -27,9 +27,8 @@ class AckermanRegulator : public GroundRegulator
             // twist.twist.linear.x = 0;
             twist.twist.angular.z = yaw_singal + field_vel.twist.angular.z / 2.5;
             // twist.twist.angular.z = 0;
-            if (twist.twist.linear.x > 0) twist.twist.angular.z = twist.twist.angular.z * 1;
+            // if (twist.twist.linear.x < 0) twist.twist.angular.z = twist.twist.angular.z * -1;
             cmd_vel_pub->publish(twist);
-            // RCLCPP_INFO_STREAM(this->get_logger(), "twist.twist.linear.x = " << twist.twist.linear.x << "\n" << "twist.twist.angular.z = " << twist.twist.angular.z);
     }
 
 
@@ -59,6 +58,6 @@ class AckermanRegulator : public GroundRegulator
 int main (int argc, char * argv[])
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<AckermanRegulator>());
+    rclcpp::spin(std::make_shared<TrackedRegulator>());
     return 0;
 }
