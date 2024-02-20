@@ -60,7 +60,7 @@ class AStarPlanner:
         open_set[self.calc_grid_index(start_node)] = start_node
 
         while 1:
-            # print("HERE")
+            print("HERE")
             if len(open_set) == 0:
                 print("Open set is empty..")
                 break
@@ -78,9 +78,6 @@ class AStarPlanner:
                 goal_node.parent_index = current.parent_index
                 goal_node.cost = current.cost
                 break
-
-            # Remove the item from the open set
-            del open_set[c_id]
 
             # Add it to the closed set
             closed_set[c_id] = current
@@ -105,6 +102,8 @@ class AStarPlanner:
                     if open_set[n_id].cost > node.cost:
                         # This path is the best until now. record it
                         open_set[n_id] = node
+            # Remove the item from the open set
+            del open_set[c_id]
 
         if len(open_set) == 0:
             return None, None

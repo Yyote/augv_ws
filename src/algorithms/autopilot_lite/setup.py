@@ -1,11 +1,11 @@
-from setuptools import find_packages, setup
+from setuptools import setup
 
-package_name = 'astar_planner'
+package_name = 'autopilot_lite'
 
 setup(
     name=package_name,
     version='0.0.0',
-    packages=find_packages(exclude=['test']),
+    packages=[package_name],
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
@@ -20,12 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'astar = astar_planner.adequate_astar:main',
-            'astar_client = astar_planner.astar_client:main',
+            f"autopilot_lite_node = {package_name}.autopilot:main"
         ],
     },
-    py_modules=[
-        f'{package_name}.helper_functions',
-        f'{package_name}.path_filter',
-    ],
 )

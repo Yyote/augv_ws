@@ -35,7 +35,7 @@ def get_index(x: int, y: int, grid_map_: OccupancyGrid):
 
 
 class AStarPlanner:
-    def __init__(self, resolution, rr, grid_map_: OccupancyGrid):
+    def __init__(self, resolution, rr, grid_map_: OccupancyGrid, ox, oy):
         """
         Initialize grid map for a star planning
         ox: x position list of Obstacles [m]
@@ -45,14 +45,14 @@ class AStarPlanner:
         """
 
         self.resolution = resolution
-        self.rr = 0.35
+        self.rr = 0.01
         self.min_x, self.min_y = 0, 0
         self.max_x, self.max_y = 0, 0
         self.obstacle_map = None
         self.x_width, self.y_width = 0, 0
         self.motion = self.get_motion_model()
         self.grid_map_ = grid_map_
-        # self.calc_obstacle_map(ox, oy)
+        self.calc_obstacle_map(ox, oy)
 
     class Node:
         def __init__(self, x, y, cost, parent_index):
@@ -85,20 +85,20 @@ class AStarPlanner:
             ry: y position list of the final path
         """
 
-        self.min_x = round(
-            self.grid_map_.info.origin.position.x
-        )  # -25  # round(min(ox))
-        self.min_y = round(
-            self.grid_map_.info.origin.position.y
-        )  # -25  # round(min(oy))
-        self.max_x = round(
-            self.grid_map_.info.origin.position.x
-            + self.grid_map_.info.resolution * self.grid_map_.info.height
-        )  # 25  # round(max(ox))
-        self.max_y = round(
-            self.grid_map_.info.origin.position.y
-            + self.grid_map_.info.resolution * self.grid_map_.info.width
-        )  # 25  # round(max(oy))
+        # self.min_x = round(
+        #     self.grid_map_.info.origin.position.x
+        # )  # -25  # round(min(ox))
+        # self.min_y = round(
+        #     self.grid_map_.info.origin.position.y
+        # )  # -25  # round(min(oy))
+        # self.max_x = round(
+        #     self.grid_map_.info.origin.position.x
+        #     + self.grid_map_.info.resolution * self.grid_map_.info.height
+        # )  # 25  # round(max(ox))
+        # self.max_y = round(
+        #     self.grid_map_.info.origin.position.y
+        #     + self.grid_map_.info.resolution * self.grid_map_.info.width
+        # )  # 25  # round(max(oy))
 
         self.x_width = round((self.max_x - self.min_x) / self.resolution)
         self.y_width = round((self.max_y - self.min_y) / self.resolution)
@@ -120,7 +120,10 @@ class AStarPlanner:
         open_set, closed_set = dict(), dict()
         open_set[self.calc_grid_index(start_node)] = start_node
 
+        # print(open_set)
+
         while 1:
+            # print(open_set)
             if len(open_set) == 0:
                 print("Open set is empty..")
                 break
@@ -185,6 +188,39 @@ class AStarPlanner:
 
         return rx, ry
 
+    def calc_obstacle_map(self, ox, oy):
+
+        self.min_x = round(min(ox))
+        self.min_y = round(min(oy))
+        self.max_x = round(max(ox))
+        self.max_y = round(max(oy))
+        
+        print("min_x:", self.min_x)
+        print("min_y:", self.min_y)
+        print("max_x:", self.max_x)
+        print("max_y:", self.max_y)
+
+        self.x_width = round((self.max_x - self.min_x) / self.resolution)
+        self.y_width = round((self.max_y - self.min_y) / self.resolution)
+        print("x_width:", self.x_width)
+        print("y_width:", self.y_width)
+
+        # obstacle map generation
+        self.obstacle_map = [[False for _ in range(self.y_width)]
+                             for _ in range(self.x_width)]
+        for ix in range(self.x_width):
+            x = self.calc_grid_position(ix, self.min_x)
+            for iy in range(self.y_width):
+                y = self.calc_grid_position(iy, self.min_y)
+                for iox, ioy in zip(ox, oy):
+                    d = math.hypot(iox - x, ioy - y)
+                    if d <= self.rr:
+                        self.obstacle_map[ix][iy] = True
+                        break
+                    # if self.grid_map_.data[get_index(x=ix, y=y, grid_map_=self.grid_map_)] > 70:
+                    #     self.obstacle_map[ix][iy] = True
+                    #     break
+
     @staticmethod
     def calc_heuristic(n1, n2):
         w = 1.0  # weight of heuristic
@@ -202,10 +238,23 @@ class AStarPlanner:
         return pos
 
     def calc_xy_index(self, position, min_pos):
-        return round((position - min_pos) / self.resolution)
+        result = round((position - min_pos) / self.resolution)
+        print(f"position = {position}")
+        print(f"min_pos = {min_pos}")
+        print(f"self.resolution = {self.resolution}")
+        print(f"result = {result}")
+        
+        return result 
 
     def calc_grid_index(self, node):
-        return (node.y - self.min_y) * self.x_width + (node.x - self.min_x)
+        result = (node.y - self.min_y) * self.x_width + (node.x - self.min_x)
+        # print(f"node.x = {node.x}")
+        # print(f"node.y = {node.y}")
+        # print(f"self.min_x = {self.min_x}")
+        # print(f"self.min_y = {self.min_y}")
+        # print(f"result = {result}")
+        # print(f"len(self.grid_map_.data) = {len(self.grid_map_.data)}")
+        return result
 
     def verify_node(self, node):
         px = self.calc_grid_position(node.x, self.min_x)
@@ -220,65 +269,100 @@ class AStarPlanner:
         elif py >= self.max_y:
             return False
 
-        # collision check
-        self.x_width = round((self.max_x - self.min_x) / self.resolution)
-        self.y_width = round((self.max_y - self.min_y) / self.resolution)
+        # for x in self.obstacle_map:
+        #     for y in x:
+        #         if y == True:
+        #             print(f"OBSTACLE!")
+        # # print("Check done!")
 
+        # collision check
+        if self.obstacle_map[node.x][node.y]:
+            return False
+        
         grid_idx = get_index(node.y, node.x, self.grid_map_)
 
-        if self.grid_map_.data[grid_idx] == 100:
+        if self.grid_map_.data[grid_idx] > 70:
             return False
 
-        i = 0
-
-        while i < math.ceil(self.rr/self.resolution):
-            if (
-                self.grid_map_.data[
-                    get_index(
-                        node.y + i,
-                        node.x,
-                        self.grid_map_,
-                    )
-                ]
-                == 100
-            ):
-                return False
-            if (
-                self.grid_map_.data[
-                    get_index(
-                        node.y - i,
-                        node.x,
-                        self.grid_map_,
-                    )
-                ]
-                == 100
-            ):
-                return False
-            if (
-                self.grid_map_.data[
-                    get_index(
-                        node.y,
-                        node.x + i,
-                        self.grid_map_,
-                    )
-                ]
-                == 100
-            ):
-                return False
-            if (
-                self.grid_map_.data[
-                    get_index(
-                        node.y,
-                        node.x - i,
-                        self.grid_map_,
-                    )
-                ]
-                == 100
-            ):
-                return False
-            i = i + 1
-
         return True
+
+
+    # def verify_node(self, node):
+    #     px = self.calc_grid_position(node.x, self.min_x)
+    #     py = self.calc_grid_position(node.y, self.min_y)
+
+    #     if px < self.min_x:
+    #         return False
+    #     elif py < self.min_y:
+    #         return False
+    #     elif px >= self.max_x:
+    #         return False
+    #     elif py >= self.max_y:
+    #         return False
+
+    #     # collision check
+    #     self.x_width = round((self.max_x - self.min_x) / self.resolution)
+    #     self.y_width = round((self.max_y - self.min_y) / self.resolution)
+
+    #     grid_idx = get_index(node.y, node.x, self.grid_map_)
+
+    #     if self.grid_map_.data[grid_idx] > 70:
+    #         return False
+
+    #     i = 0
+
+    #     while i < math.ceil(self.rr/self.resolution):
+    #         if (
+    #             self.grid_map_.data[
+    #                 get_index(
+    #                     node.y + i,
+    #                     node.x,
+    #                     self.grid_map_,
+    #                 )
+    #             ]
+    #             # == 100
+    #             > 70
+    #         ):
+    #             return False
+    #         if (
+    #             self.grid_map_.data[
+    #                 get_index(
+    #                     node.y - i,
+    #                     node.x,
+    #                     self.grid_map_,
+    #                 )
+    #             ]
+    #             # == 100
+    #             > 70
+    #         ):
+    #             return False
+    #         if (
+    #             self.grid_map_.data[
+    #                 get_index(
+    #                     node.y,
+    #                     node.x + i,
+    #                     self.grid_map_,
+    #                 )
+    #             ]
+    #             # == 100
+    #             > 70
+    #         ):
+    #             return False
+    #         if (
+    #             self.grid_map_.data[
+    #                 get_index(
+    #                     node.y,
+    #                     node.x - i,
+    #                     self.grid_map_,
+    #                 )
+    #             ]
+    #             # == 100
+    #             > 70
+    #         ):
+    #             return False
+    #         i = i + 1
+
+    #     return True
 
     @staticmethod
     def get_motion_model():
@@ -318,7 +402,7 @@ class GlobalPlanner(Node):
 
         # self.radius_of_robot = 0.8
         # self.filter_traj_threshold = 0.5
-        # self.consider_unfound_area_flag = False
+        self.consider_unfound_area_flag = False
 
         # self.radius_of_robot = rclpy.get_param('~radius_of_robot', 0.2)
         self.radius_of_robot = 0.35
@@ -328,7 +412,7 @@ class GlobalPlanner(Node):
         self.consider_unfound_area_flag = False
 
         self.map_sub = self.create_subscription(OccupancyGrid, "/OccupancyGrid_map", self.map_clb, qos_profile=10)
-        self.pose_sub = self.create_subscription(PoseStamped, "/pose", self.robot_pose_clb, qos_profile=10)
+        self.pose_sub = self.create_subscription(PoseStamped, "/robot1/pose", self.robot_pose_clb, qos_profile=10)
 
         # # Паблишер миссии
         # self.mission_pub = rclpy.Publisher("/autopilot/mission", Mission, queue_size=10)
@@ -339,13 +423,20 @@ class GlobalPlanner(Node):
         self.service = self.create_service(GetTrajectory, '/astar/get_trajectory', self.get_trajectory_server)
 
 
-    def get_trajectory_server(self, req):
+    def get_trajectory_server(self, req, resp):
         self.goal_pose_ = req.goal_position
         # print("Get goal position :" + str(self.goal_pose_))
         self.trajectory_sended = False
         path = self.planner_loop()
         # print("Returned path :" + str(path))
-        return GetTrajectoryResponse(path)
+        
+        resp = GetTrajectory.Response()
+        print(f"{type(path)}")
+        resp.path = path
+        
+        
+        
+        return resp
 
     def map_clb(self, msg: OccupancyGrid):
         """
@@ -388,15 +479,13 @@ class GlobalPlanner(Node):
         """
         y = divmod(i, self.grid_map_.info.width)[0]
         x = i - y * self.grid_map_.info.width
-
+        
         # print(self.grid_map_.info)
         # print(y)
-
-        x = x * self.grid_map_.info.resolution + \
-            self.grid_map_.info.origin.position.x + self.grid_map_.info.resolution / 2.0
-        y = y * self.grid_map_.info.resolution + \
-            self.grid_map_.info.origin.position.y + self.grid_map_.info.resolution / 2.0
-
+        
+        x = x * self.grid_map_.info.resolution + self.grid_map_.info.origin.position.x + self.grid_map_.info.resolution / 2.0
+        y = y * self.grid_map_.info.resolution + self.grid_map_.info.origin.position.y + self.grid_map_.info.resolution / 2.0
+  
         return x, y
 
     def display_path(self, trajectory: list):
@@ -604,22 +693,25 @@ class GlobalPlanner(Node):
 
     def planner_loop(self):
         if (self.robot_pose_ == None or self.grid_map_ == None or self.trajectory_sended == True):
+            # print(f"self.robot_pose_ == None = {self.robot_pose_ == None}")
+            # print(f"self.grid_map_ == None = {self.grid_map_ == None}")
+            # print(f"self.trajectory_sended == True = {self.trajectory_sended == True}")
             return
 
-        # obs_x = []
-        # obs_y = []
+        obs_x = []
+        obs_y = []
 
-        # self.get_obstacle_map()
+        self.get_obstacle_map()
 
-        # for i in self.obstacle_map:
-        #     x, y = self.get_coords_from_grid_index(i)
-        #     obs_x.append(x)
-        #     obs_y.append(y)
-        #     # print(f"OBSTACLE {i} {[x, y]}")
-        # self.display_obs(obs_x, obs_y)
+        for i in self.obstacle_map:
+            x, y = self.get_coords_from_grid_index(i)
+            obs_x.append(x)
+            obs_y.append(y)
+            # print(f"OBSTACLE {i} {[x, y]}")
+        self.display_obs(obs_x, obs_y)
         print(f"Robot rad = {self.radius_of_robot}")
         a_star = AStarPlanner(
-            self.grid_map_.info.resolution, self.radius_of_robot, self.grid_map_
+            self.grid_map_.info.resolution, self.radius_of_robot, self.grid_map_, obs_x, obs_y
         )
 
         # self.start_pose_grid = [0, 0]
@@ -647,7 +739,7 @@ class GlobalPlanner(Node):
 
         self.display_path(trajectory)
 
-        output_path = list()
+        output_path = []
         for i in range(len(trajectory)):
             waypoint = PoseStamped()
             waypoint.pose.position.x = trajectory[i][1]
@@ -657,6 +749,9 @@ class GlobalPlanner(Node):
 
         self.trajectory_sended = True
         self.old_goal_pose = self.goal_pose_
+        
+        print(f"{type(output_path)}")
+        
         return output_path
 
 

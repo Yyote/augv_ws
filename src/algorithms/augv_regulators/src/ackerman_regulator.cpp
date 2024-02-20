@@ -8,7 +8,7 @@ class AckermanRegulator : public GroundRegulator
     public:
     AckermanRegulator()
     {
-        rviz_goal_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>("/goal_pose", 10, std::bind(&AckermanRegulator::goal_sub_cb, this, std::placeholders::_1));
+        rviz_goal_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>(this->robot_ns + "/goal_pose", 10, std::bind(&AckermanRegulator::goal_sub_cb, this, std::placeholders::_1));
         potential_sub = this->create_subscription<geometry_msgs::msg::TwistStamped>(this->robot_ns + "/potential_fields/force", 10, std::bind(&AckermanRegulator::potential_cb, this, std::placeholders::_1));
         goal_pub = this->create_publisher<augv_navigation_msgs::msg::Position>("/robot" + std::to_string(this->id_) + "/goal", 10);
     }

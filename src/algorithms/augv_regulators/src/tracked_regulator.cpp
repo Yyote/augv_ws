@@ -8,7 +8,7 @@ class TrackedRegulator : public GroundRegulator
     public:
     TrackedRegulator()
     {
-        rviz_goal_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>("/goal_pose", 10, std::bind(&TrackedRegulator::goal_sub_cb, this, std::placeholders::_1));
+        rviz_goal_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>(this->robot_ns + "/goal_pose", 10, std::bind(&TrackedRegulator::goal_sub_cb, this, std::placeholders::_1));
         potential_sub = this->create_subscription<geometry_msgs::msg::TwistStamped>(this->robot_ns + "/potential_fields/force", 10, std::bind(&TrackedRegulator::potential_cb, this, std::placeholders::_1));
         goal_pub = this->create_publisher<augv_navigation_msgs::msg::Position>("/robot" + std::to_string(this->id_) + "/goal", 10);
     }
@@ -23,9 +23,11 @@ class TrackedRegulator : public GroundRegulator
     {
             geometry_msgs::msg::TwistStamped twist;
             twist.header.stamp = this->get_clock()->now();
-            twist.twist.linear.x = x_signal + field_vel.twist.linear.x / 1;
+            // twist.twist.linear.x = x_signal + field_vel.twist.linear.x / 1;
+            twist.twist.linear.x = x_signal + field_vel.twist.linear.x / 2;
             // twist.twist.linear.x = 0;
-            twist.twist.angular.z = yaw_singal + field_vel.twist.angular.z / 2.5;
+            // twist.twist.angular.z = yaw_singal + field_vel.twist.angular.z / 2.5;
+            twist.twist.angular.z = yaw_singal + field_vel.twist.angular.z / 3.5;
             // twist.twist.angular.z = 0;
             // if (twist.twist.linear.x < 0) twist.twist.angular.z = twist.twist.angular.z * -1;
             cmd_vel_pub->publish(twist);

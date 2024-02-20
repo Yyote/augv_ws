@@ -7,7 +7,6 @@ from drone_msgs.msg import GlobalTrajectory
 import math
 
 class AStarPlanner:
-
     def __init__(self, oy, ox, resolution, rr):
         """
         Initialize grid map for a star planning

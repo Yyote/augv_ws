@@ -1,0 +1,1 @@
+drone_msgs/Goal[] waypoints
