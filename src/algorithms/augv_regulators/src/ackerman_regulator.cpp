@@ -23,9 +23,9 @@ class AckermanRegulator : public GroundRegulator
     {
             geometry_msgs::msg::TwistStamped twist;
             twist.header.stamp = this->get_clock()->now();
-            twist.twist.linear.x = x_signal + field_vel.twist.linear.x / 1;
+            twist.twist.linear.x = x_signal + field_vel.twist.linear.x / 6;
             // twist.twist.linear.x = 0;
-            twist.twist.angular.z = yaw_singal + field_vel.twist.angular.z / 2.5;
+            twist.twist.angular.z = yaw_singal + field_vel.twist.angular.z / 15.5;
             // twist.twist.angular.z = 0;
             if (twist.twist.linear.x < 0) twist.twist.angular.z = twist.twist.angular.z * -1;
             cmd_vel_pub->publish(twist);

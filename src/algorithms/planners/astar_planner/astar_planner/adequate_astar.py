@@ -285,9 +285,12 @@ class AStarPlanner:
         open_set, closed_set = dict(), dict()
         open_set[self.calc_grid_index(start_node)] = start_node
 
+        open_set_empty = False
+
         while 1:
             if len(open_set) == 0:
                 print("Open set is empty..")
+                open_set_empty = True
                 break
 
             c_id = min(
@@ -330,7 +333,11 @@ class AStarPlanner:
                         # This path is the best until now. record it
                         open_set[n_id] = node
 
-        rx, ry = self.calc_final_path(goal_node, closed_set)
+        if not open_set_empty:
+            rx, ry = self.calc_final_path(goal_node, closed_set)
+        else:
+            # rx, ry = self.calc_final_paths(start_node, closed_set)
+            rx, ry = self.calc_final_path(goal_node, closed_set)
 
         return rx, ry
 
@@ -435,7 +442,7 @@ class AStarPlanner:
 
 class GlobalPlanner(Node):
     def __init__(self):
-        super().__init__("global_planner", allow_undeclared_parameters=True,
+        super().__init__("astar_global_planner", allow_undeclared_parameters=True,
                          automatically_declare_parameters_from_overrides=True)
 
         # self.robot_id = self.get_parameter("id").value
@@ -493,6 +500,8 @@ class GlobalPlanner(Node):
         """
         """
         self.robot_pose_ = msg
+        if self.goal_pose_ == PoseStamped():
+            self.goal_pose_ = msg
 
     def goal_pose_clb(self, msg: PoseStamped):
         """
@@ -574,7 +583,7 @@ class GlobalPlanner(Node):
         # print("len ", len(self.grid_map_.data))
         # print("resolution ", self.grid_map_.info.resolution)
         a_star = AStarPlanner(
-            obs_x, obs_y, self.grid_map_.info.resolution, 0.5)
+            obs_x, obs_y, self.grid_map_.info.resolution, 0.7)
 
         # self.start_pose_grid = [0, 0]
         cur_time = self.get_clock().now().to_msg().nanosec / (10**9) + \

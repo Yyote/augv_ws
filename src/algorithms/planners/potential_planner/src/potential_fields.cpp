@@ -15,12 +15,12 @@
 using std::placeholders::_1;
 
 
-double k1 = 0.006 * 3.8;
-double k2 = 0.008 * 3.8;
+double k1 = 0.004 * 2.5;
+double k2 = 0.007 * 3;
 double k3 = 0.010 * 3.8;
 double rmax1 = 3.8;
-double rmax2 = 3.5;
-double rmax3 = 3.2;
+double rmax2 = 3;
+double rmax3 = 1.5;
 
 
 nav_msgs::msg::Odometry global_odom;

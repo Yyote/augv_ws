@@ -6,22 +6,18 @@ def generate_launch_description():
     
     robot_types = [
         'omni',
-        'omni',
-        'omni',
-        'omni',
-        'omni',
+        'tracked',
+        'ackerman',
     ]
     
     robot_coords = [
         1, 2, 
         2, 2, 
         3, 2, 
-        4, 2, 
-        5, 2, 
     ]
     
     
-    map_name = 'map_test.tmx'
+    map_name = 'corridor_maze.tmx'
     
     # 1. Симулятор
     
@@ -34,7 +30,7 @@ def generate_launch_description():
             {'robot_coords' : robot_coords},
             {'map_name' : map_name},
         ],
-        # emulate_tty=True, output='screen'
+        emulate_tty=True, output='screen'
     ))
     
     for i in range(len(robot_types)):

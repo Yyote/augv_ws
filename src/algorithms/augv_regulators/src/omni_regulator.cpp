@@ -24,9 +24,9 @@ class OmniRegulator : public GroundRegulator
             geometry_msgs::msg::TwistStamped twist;
             twist.header.stamp = this->get_clock()->now();
             // twist.twist.linear.x = x_signal + field_vel.twist.linear.x / 1;
-            twist.twist.linear.x = x_signal + field_vel.twist.linear.x / 2;
+            twist.twist.linear.x = x_signal + field_vel.twist.linear.x / 5;
             // twist.twist.linear.y = y_signal + field_vel.twist.linear.y / 1;
-            twist.twist.linear.y = y_signal + field_vel.twist.linear.y / 2;
+            twist.twist.linear.y = y_signal + field_vel.twist.linear.y / 5;
             // twist.twist.linear.x = 0;
             twist.twist.angular.z = yaw_singal; // + field_vel.twist.angular.z / 2.5;
             // twist.twist.angular.z = 0;

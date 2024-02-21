@@ -47,7 +47,7 @@ class AutopilotLiteNode(Node):
                 
                 dr = (dx ** 2 + dy ** 2 + dz ** 2) ** 0.5
                 print(f"dr = {dr}")
-                if dr < 1.5:
+                if dr < 1.0:
                     self.curr_wp = self.current_trajectory[0] 
                     self.goal_pub.publish(self.curr_wp) ## Отправить текущую цель
                     del self.current_trajectory[0]
