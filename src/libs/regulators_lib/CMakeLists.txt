@@ -11,13 +11,14 @@ find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(augv_navigation_msgs REQUIRED)
 find_package(euler_angles_lib REQUIRED)
+find_package(visualization_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
-set(deps ament_cmake rclcpp geometry_msgs augv_navigation_msgs euler_angles_lib)
+set(deps ament_cmake rclcpp geometry_msgs augv_navigation_msgs euler_angles_lib visualization_msgs)
 
 
 

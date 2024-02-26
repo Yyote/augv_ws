@@ -25,11 +25,11 @@ def generate_launch_description():
         package="gr_kinematic_sim",
         executable="sim",
         name="test_scenario_sim",
-        parameters=[
-            {'robot_types' : robot_types},
-            {'robot_coords' : robot_coords},
-            {'map_name' : map_name},
-        ],
+        parameters=[{
+            'robot_types' : robot_types,
+            'robot_coords' : robot_coords,
+            'map_name' : map_name,
+        }],
         emulate_tty=True, output='screen'
     ))
     
@@ -109,5 +109,21 @@ def generate_launch_description():
                 # output="screen"
             )
         )
+        
+        # 6. Robot Info для каждой машинки
+        ld.add_action(
+                actions.Node(
+                package="robot_info", 
+                executable="robot_info_node",
+                namespace=f"robot{i + 1}",
+                parameters=[{
+                    'id': i + 1,
+                    'platform_type': robot_types[i],
+                }],
+                # emulate_tty=True,
+                # output="screen"
+            )
+        )
+        
 
     return ld

@@ -1,0 +1,5 @@
+std_msgs/Header header
+uint32 robot_id
+std_msgs/String platform_type
+geometry_msgs/PoseStamped current_pose
+geometry_msgs/PoseStamped goal_pose

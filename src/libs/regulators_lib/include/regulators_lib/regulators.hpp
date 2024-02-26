@@ -8,6 +8,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
+// #include "visualization_msgs/msg/marker.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 #include "augv_navigation_msgs/msg/position.hpp"
 #include "euler_angles_lib/euler_angles.hpp"
@@ -151,7 +152,6 @@ class GroundRegulator : public rclcpp::Node
             // float dyaw = atan2(dy, dx);
             dyaw = atan2f(dy, dx);
             // dyaw = ea.normalize_angle(dyaw);
-            RCLCPP_WARN_STREAM(this->get_logger(), "DYAW = " << dyaw);
 
             // auto xy = ea.rotate_vector_by_angle(dx, dy, curr_orientation);
             // dx = xy[0];

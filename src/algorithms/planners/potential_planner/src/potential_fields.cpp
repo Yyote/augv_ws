@@ -187,7 +187,7 @@ class FieldsNode : public rclcpp::Node
         // twist.twist.linear.y = 0;
         twist.twist.angular.z = tmpy;
 
-        RCLCPP_INFO_STREAM(this->get_logger(), "twist.twist.linear.x: " << twist.twist.linear.x << "twist.twist.linear.y: " << twist.twist.linear.y << "");
+        // RCLCPP_INFO_STREAM(this->get_logger(), "twist.twist.linear.x: " << twist.twist.linear.x << "twist.twist.linear.y: " << twist.twist.linear.y << "");
 
         field_vel_pub->publish(twist);
     }

@@ -1,0 +1,1 @@
+augv_navigation_msgs/RobotInfo[] data

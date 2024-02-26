@@ -477,7 +477,7 @@ class GlobalPlanner(Node):
             # PoseStamped, robot_topic_prefix + "/pose", self.robot_pose_clb,  qos_profile_sensor_data)
             PoseStamped, robot_topic_prefix + "/pose", self.robot_pose_clb, 10)
         self.create_subscription(
-            PoseStamped, "/goal_pose", self.goal_pose_clb, 10)
+            PoseStamped, robot_topic_prefix + "/global_planner/goal_pose", self.goal_pose_clb, 10)
 
         self.send_trajectory_pub = self.create_publisher(
             GlobalTrajectory, robot_topic_prefix + "/trajectory", 10)
