@@ -125,5 +125,18 @@ def generate_launch_description():
             )
         )
         
+        # 7. exploration для каждого робота
+        ld.add_action(
+                actions.Node(
+                package="group_exploration", 
+                executable="group_exploration_node",
+                namespace=f"robot{i + 1}",
+                parameters=[{
+                    'id': i + 1,
+                }],
+                emulate_tty=True,
+                output="screen"
+            )
+        )
 
     return ld
