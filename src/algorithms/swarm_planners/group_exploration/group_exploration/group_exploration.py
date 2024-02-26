@@ -363,7 +363,7 @@ class Explorer(Node):
                 float(pts_list[i][1]) * self.global_map_.info.resolution
                 + self.global_map_.info.origin.position.x
             )
-            print(f"point = {point}")
+            # print(f"point = {point}")
             
             local_cost = 0
             
