@@ -583,7 +583,7 @@ class GlobalPlanner(Node):
         # print("len ", len(self.grid_map_.data))
         # print("resolution ", self.grid_map_.info.resolution)
         a_star = AStarPlanner(
-            obs_x, obs_y, self.grid_map_.info.resolution, 0.7)
+            obs_x, obs_y, self.grid_map_.info.resolution, 0.5)
 
         # self.start_pose_grid = [0, 0]
         cur_time = self.get_clock().now().to_msg().nanosec / (10**9) + \
@@ -681,6 +681,8 @@ class GlobalPlanner(Node):
             waypoint.pose.position.x = list_of_np_coords[i][0]
             waypoint.pose.position.y = list_of_np_coords[i][1]
             self.trajectory.waypoints.append(waypoint)
+
+        del self.trajectory.waypoints[0]
 
         self.trajectory.max_velocity = 0.6
         self.send_trajectory_pub.publish(self.trajectory)

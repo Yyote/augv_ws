@@ -44,7 +44,7 @@ class Map:
         data = np.asarray(msg.data, dtype=np.uint8).reshape(
             msg.info.height, msg.info.width
         )
-        print(np.unique(data, axis=0, return_counts=True))
+        # print(np.unique(data, axis=0, return_counts=True))
 
         return np.ma.array(data, mask=data == 0, fill_value=-1)
 
@@ -153,7 +153,7 @@ class Explorer(Node):
         self.create_subscription(RobotInfoArray, '/global/robot_info', self.robot_info_cb, 10)
         self.create_subscription(PoseStamped, f'/robot{self.robot_id}/pose', self.pose_cb, 10)
         self.create_subscription(
-            OccupancyGrid, "OccupancyGrid_map", self.global_map_clb, 10
+            OccupancyGrid, "/OccupancyGrid_map", self.global_map_clb, 10
         )  # qos_profile_sensor_data)
         self.create_subscription(
             Bool, "exploration_need", self.exploration_need_clb, 10
@@ -230,7 +230,7 @@ class Explorer(Node):
         center_of_mass_y = 0
 
         for point in points:
-            print(point[0])
+            # print(point[0])
             center_of_mass_x += point[0][0]
             center_of_mass_y += point[0][1]
         center_of_mass_x = center_of_mass_x / len(points)
@@ -255,7 +255,7 @@ class Explorer(Node):
                 max_lenght = dist
                 idx = i
             i = i + 1
-        print("line num", idx)
+        # print("line num", idx)
         return idx
 
     def find_line_center(self, line):
@@ -266,10 +266,19 @@ class Explorer(Node):
 
     def exploration_loop(self):
         if self.global_map_ == None:
+            print("No map")
             return
         if len(self.global_map_.data) < 10:
+            print('Small map')
             return
         if self.need_exploration == False:
+            print("No exploration needed")
+            return
+        if self.current_pose == None:
+            print("No pose")
+            return
+        if self.robot_info_array == None:
+            print("No robot info")
             return
         print("start")
 
@@ -312,11 +321,11 @@ class Explorer(Node):
 
         # Say you want these points in a list form, then you can do this.
         pts_list = [[r, c] for r, c in zip(*intersection_points)]
-        print(len(pts_list))
+        # print(len(pts_list))
 
-        contours, hierarchy = cv2.findContours(
-            common, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
-        )
+        # contours, hierarchy = cv2.findContours(
+        #     common, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+        # )
 
         # edges = cv2.Canny(common, 10, 50)
         # print("edges", edges)
@@ -345,30 +354,42 @@ class Explorer(Node):
         best_cost = 9999999999999
         
         for i in range(len(pts_list)):
-            point = (pts_list[i][0], pts_list[i][1])
+            point = [0, 0]
+            point[1] = (
+                float(pts_list[i][0]) * self.global_map_.info.resolution
+                + self.global_map_.info.origin.position.y
+            )
+            point[0] = (
+                float(pts_list[i][1]) * self.global_map_.info.resolution
+                + self.global_map_.info.origin.position.x
+            )
+            print(f"point = {point}")
+            
             local_cost = 0
             
             dx = point[0] - self.current_pose.pose.position.x
             dy = point[1] - self.current_pose.pose.position.y
             dr = (dx ** 2 + dy ** 2) ** 0.5
             
-            local_cost += dr
+            local_cost += dr 
             
             for i in range(len(self.robot_info_array.data)):
                 if self.robot_info_array.data[i].robot_id == self.robot_id:
                     continue
                 
                 current_robot_pose = self.robot_info_array.data[i].current_pose
-                dx = current_robot_pose.pose.position.x - self.current_pose.pose.position.x
-                dy = current_robot_pose.pose.position.y - self.current_pose.pose.position.y
+                dx = point[0] - current_robot_pose.pose.position.x
+                dy = point[1] - current_robot_pose.pose.position.y
                 dr = (dx ** 2 + dy ** 2) ** 0.5
                 
                 local_cost -= dr
                 
-                current_robot_goal = self.robot_info_array.data[i].current_goal
-                dx = current_robot_goal.pose.position.x - self.current_pose.pose.position.x
-                dy = current_robot_goal.pose.position.y - self.current_pose.pose.position.y
+                current_robot_goal = self.robot_info_array.data[i].goal_pose
+                dx = point[0] - current_robot_goal.pose.position.x
+                dy = point[1] - current_robot_goal.pose.position.y
                 dr = (dx ** 2 + dy ** 2) ** 0.5
+                
+                local_cost -= dr
             
             
             if local_cost < best_cost:
@@ -376,15 +397,11 @@ class Explorer(Node):
                 best_cost = local_cost
 
         goal_msg = PoseStamped()
-        goal_msg.pose.position.x = (
-            goal[0] * self.global_map_.info.resolution
-            + self.global_map_.info.origin.position.y
-        )
-        goal_msg.pose.position.y = (
-            goal[1] * self.global_map_.info.resolution
-            + self.global_map_.info.origin.position.x
-        )
+        goal_msg.pose.position.x = goal[0]
+        goal_msg.pose.position.y = goal[1]
 
+        # print(goal)
+        # print(goal_msg)
         self.pub_goal_point.publish(goal_msg)
 
         self.display_countours(pts_list)
