@@ -39,7 +39,7 @@ class RobotInfoNode(Node):
         self.sub_robot_info = self.create_subscription(RobotInfoArray, '/global/robot_info', self.robot_info_cb, 10)
         
         self.pub_robot_info = self.create_publisher(RobotInfoArray, '/global/robot_info', 10)
-        timer_period = 3  # seconds
+        timer_period = 1  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         
         self.local_robot_info_array = RobotInfoArray()
