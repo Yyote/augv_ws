@@ -1,0 +1,4 @@
+std_msgs/Header header
+uint32 robot_id
+geometry_msgs/PoseStamped current_pose
+uint32 current_fitness_value
