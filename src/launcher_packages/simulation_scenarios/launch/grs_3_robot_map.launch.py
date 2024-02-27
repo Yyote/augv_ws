@@ -17,8 +17,8 @@ def generate_launch_description():
     ]
     
     
-    map_name = 'map_test.tmx'
-    # map_name = 'corridor_maze.tmx'
+    # map_name = 'map_test.tmx'
+    map_name = 'corridor_maze.tmx'
     
     # 1. Симулятор
     

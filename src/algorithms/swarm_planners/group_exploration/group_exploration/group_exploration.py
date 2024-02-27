@@ -306,8 +306,8 @@ class Explorer(Node):
         kernel = np.ones((3, 3), dtype=np.uint8)
 
         # Dilating masks to expand boundary.
-        unknown_mask = cv2.erode(unknown_mask, kernel, iterations=2)
-        unknown_mask = cv2.dilate(unknown_mask, kernel, iterations=2)
+        unknown_mask = cv2.erode(unknown_mask, kernel, iterations=1)
+        unknown_mask = cv2.dilate(unknown_mask, kernel, iterations=1)
         known_mask = cv2.dilate(known_mask, kernel, iterations=1)
         obstacle_mask = cv2.dilate(obstacle_mask, kernel, iterations=1)
 
@@ -371,7 +371,7 @@ class Explorer(Node):
             dy = point[1] - self.current_pose.pose.position.y
             dr = (dx ** 2 + dy ** 2) ** 0.5
             
-            local_cost += dr 
+            local_cost += dr * 1
             
             for i in range(len(self.robot_info_array.data)):
                 if self.robot_info_array.data[i].robot_id == self.robot_id:
@@ -382,19 +382,24 @@ class Explorer(Node):
                 dy = point[1] - current_robot_pose.pose.position.y
                 dr = (dx ** 2 + dy ** 2) ** 0.5
                 
-                local_cost -= dr
+                local_cost -= dr * 1
                 
                 current_robot_goal = self.robot_info_array.data[i].goal_pose
                 dx = point[0] - current_robot_goal.pose.position.x
                 dy = point[1] - current_robot_goal.pose.position.y
                 dr = (dx ** 2 + dy ** 2) ** 0.5
                 
-                local_cost -= dr
+                local_cost -= dr * 2
             
             
             if local_cost < best_cost:
                 goal = point
                 best_cost = local_cost
+
+        if goal is None:
+            print("Goal is None!")
+            print(f"len(pts_list) = {len(pts_list)}")
+            return
 
         goal_msg = PoseStamped()
         goal_msg.pose.position.x = goal[0]
