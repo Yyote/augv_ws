@@ -30,6 +30,7 @@ def generate_launch_description():
             'robot_types' : robot_types,
             'robot_coords' : robot_coords,
             'map_name' : map_name,
+            'log_prefix' : "frontier_pso",
         }],
         emulate_tty=True, output='screen'
     ))

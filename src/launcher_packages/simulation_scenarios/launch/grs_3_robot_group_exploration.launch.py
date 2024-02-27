@@ -30,7 +30,7 @@ def generate_launch_description():
             'robot_types' : robot_types,
             'robot_coords' : robot_coords,
             'map_name' : map_name,
-            'log_prefix' : "modified_pso",
+            'log_prefix' : "group_exploration",
         }],
         emulate_tty=True, output='screen'
     ))
@@ -130,13 +130,11 @@ def generate_launch_description():
         # 7. exploration для каждого робота
         ld.add_action(
                 actions.Node(
-                package="pso_exploration", 
-                executable="pso_exploration_node",
+                package="group_exploration", 
+                executable="group_exploration_node",
                 namespace=f"robot{i + 1}",
                 parameters=[{
                     'id': i + 1,
-                    'cell_evaluation_radius': 4,
-                    'neighbour_evaluation_radius': 10,
                 }],
                 emulate_tty=True,
                 output="screen"
