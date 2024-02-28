@@ -154,6 +154,7 @@ class ModifiedPSOExplorer(Node):
         self.robot_id = try_get(lambda: self.get_parameter("id"), 1)
         self.cell_evaluation_radius = try_get(lambda: self.get_parameter("cell_evaluation_radius"), 4)
         self.neighbour_evaluation_radius = try_get(lambda: self.get_parameter("neighbour_evaluation_radius"), 10)
+        self.exploration_period = try_get(lambda: self.get_parameter("exploration_period"), 10)
         self.current_point = None # for first summand in pso
         self.current_fitness_value = 0
         self.best_fitness_position = None 
@@ -161,7 +162,7 @@ class ModifiedPSOExplorer(Node):
         self.best_neighbour_position = None
         self.best_neighbour_fitness_value = 0
 
-        self.velocity_dampening_coefficient = 0.9
+        self.velocity_dampening_coefficient = 0.1
         
         self.global_map_ = None
         self.exploration_field_ = None
@@ -187,9 +188,9 @@ class ModifiedPSOExplorer(Node):
         self.pub_goal_point = self.create_publisher(PoseStamped, goal_pose_topic, 10)
         self.pso_status_pub = self.create_publisher(PsoRobotStatus, "/global/pso_status", 10)
         
-        self.create_timer(5, self.exploration_loop)
+        self.create_timer(self.exploration_period, self.exploration_loop)
         self.create_timer(1, self.publish_pso_status)
-        self.create_timer(10, self.zero_neighbour_fitness_value)
+        self.create_timer(10, self.evaporate_best_fitness_value)
 
     def pso_status_cb(self, status: PsoRobotStatus):
         if status.robot_id == self.robot_id:
@@ -222,9 +223,9 @@ class ModifiedPSOExplorer(Node):
         msg.current_pose = self.current_pose
         self.pso_status_pub.publish(msg)
 
-    def zero_neighbour_fitness_value(self):
-        self.best_neighbour_fitness_value = 0
-        self.best_neighbour_position = None
+    def evaporate_best_fitness_value(self):
+        self.best_neighbour_fitness_value /= 2
+        # self.best_neighbour_position = None
 
     def display_countours(self, trajectory: list):
 
@@ -464,22 +465,18 @@ class ModifiedPSOExplorer(Node):
             if self.best_fitness_value < fitness_value:
                 self.best_fitness_value = fitness_value
                 self.best_fitness_position = self.current_pose
+                goal[0] += self.best_fitness_position.pose.position.x * 0.2 * float(np.random.random(1))
+                goal[1] += self.best_fitness_position.pose.position.y * 0.2 * float(np.random.random(1))
+                divisor += 1
         elif self.best_fitness_position is None:
             self.best_fitness_position = self.current_pose
             self.best_fitness_value = fitness_value
-            
-            goal[0] += self.best_fitness_position.pose.position.x * 0.2 * float(np.random.random(1))
-            goal[1] += self.best_fitness_position.pose.position.y * 0.2 * float(np.random.random(1))
-            divisor += 1
         
         # for social summand
         if self.best_neighbour_position is not None:
             goal[0] += self.best_neighbour_position.pose.position.x * 0.5 * float(np.random.random(1))
             goal[1] += self.best_neighbour_position.pose.position.y * 0.5 * float(np.random.random(1))
             divisor += 1
-            # if local_cost < best_cost:
-            #     goal = point
-            #     best_cost = local_cost
 
         if most_distant_unexplored_point is not None:
             goal[0] += most_distant_unexplored_point[0] * 1 * float(np.random.random(1))

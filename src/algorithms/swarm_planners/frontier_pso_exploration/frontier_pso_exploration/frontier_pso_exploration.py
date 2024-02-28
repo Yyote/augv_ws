@@ -140,6 +140,7 @@ class FrontierPSOExplorer(Node):
         )
         
         self.robot_id = try_get(lambda: self.get_parameter("id"), 1)
+        self.exploration_period = try_get(lambda: self.get_parameter("exploration_period"), 1)
         
         self.current_point = None
         
