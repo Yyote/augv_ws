@@ -190,7 +190,7 @@ class ModifiedPSOExplorer(Node):
         
         self.create_timer(self.exploration_period, self.exploration_loop)
         self.create_timer(1, self.publish_pso_status)
-        self.create_timer(10, self.evaporate_best_fitness_value)
+        self.create_timer(self.exploration_period / 2, self.evaporate_best_fitness_value)
 
     def pso_status_cb(self, status: PsoRobotStatus):
         if status.robot_id == self.robot_id:
@@ -449,6 +449,7 @@ class ModifiedPSOExplorer(Node):
                 most_distant_unexplored_point = point
                 greatest_distance = dr
             
+        self.current_fitness_value = fitness_value
         
         # for coordinate choosing we have to average the coordinates
         divisor = 0
@@ -459,7 +460,6 @@ class ModifiedPSOExplorer(Node):
             goal[1] += self.velocity_dampening_coefficient * self.current_point[1]
             divisor += 1
         
-        self.current_fitness_value = fitness_value
         # for cognitive summand
         if self.best_fitness_position is not None:
             if self.best_fitness_value < fitness_value:
@@ -474,8 +474,8 @@ class ModifiedPSOExplorer(Node):
         
         # for social summand
         if self.best_neighbour_position is not None:
-            goal[0] += self.best_neighbour_position.pose.position.x * 0.5 * float(np.random.random(1))
-            goal[1] += self.best_neighbour_position.pose.position.y * 0.5 * float(np.random.random(1))
+            goal[0] += self.best_neighbour_position.pose.position.x * 0.3 * float(np.random.random(1))
+            goal[1] += self.best_neighbour_position.pose.position.y * 0.3 * float(np.random.random(1))
             divisor += 1
 
         if most_distant_unexplored_point is not None:
@@ -485,7 +485,7 @@ class ModifiedPSOExplorer(Node):
 
         print(float(np.random.random(1)))
 
-        divisor = 2
+        divisor = 1
 
         goal[0] /= divisor
         goal[1] /= divisor

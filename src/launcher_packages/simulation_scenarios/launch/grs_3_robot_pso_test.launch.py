@@ -135,8 +135,8 @@ def generate_launch_description():
                 namespace=f"robot{i + 1}",
                 parameters=[{
                     'id': i + 1,
-                    'cell_evaluation_radius': 8,
-                    'neighbour_evaluation_radius': 10,
+                    'cell_evaluation_radius': 4,
+                    'neighbour_evaluation_radius': 6,
                     'exploration_period': 10,
                 }],
                 emulate_tty=True,
