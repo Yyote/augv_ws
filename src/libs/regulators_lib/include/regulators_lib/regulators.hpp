@@ -62,7 +62,7 @@ class PID
     /**
     * @brief Equalizes the integral and derivative calculated before to zero and clears the error vector
     */
-    float clear()
+    void clear()
     {
         integral = 0;
         derivative = 0;

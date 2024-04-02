@@ -77,7 +77,7 @@ class EulerAngles {
     void get_RPY_from_msg_quaternion(geometry_msgs::msg::Quaternion q)
     {
         tf2::Quaternion q_tf;
-        tf2::convert(q, q_tf);
+        tf2::fromMsg(q, q_tf);
 
         get_RPY_from_quaternion(q_tf);
     }
@@ -103,7 +103,7 @@ class FieldsNode : public rclcpp::Node
     {
         std::string local_namespace = "/robot" + std::to_string(id);
         std::string topic = local_namespace + "/scan";
-        RCLCPP_INFO_STREAM(this->get_logger(), "Topic = " << topic);
+        RCLCPP_INFO_ONCE(this->get_logger(), "Topic = " + topic);
         laser_scan_sub = this->create_subscription<sensor_msgs::msg::LaserScan>(topic, 100, std::bind(&FieldsNode::laser_scan_cb, this, _1));
         pose_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>(local_namespace + "/pose", 100, std::bind(&FieldsNode::pose_sub_cb, this, _1));
         field_vel_pub = this->create_publisher<geometry_msgs::msg::TwistStamped>(local_namespace + "/potential_fields/force", 10);
@@ -187,7 +187,7 @@ class FieldsNode : public rclcpp::Node
         // twist.twist.linear.y = 0;
         twist.twist.angular.z = tmpy;
 
-        // RCLCPP_INFO_STREAM(this->get_logger(), "twist.twist.linear.x: " << twist.twist.linear.x << "twist.twist.linear.y: " << twist.twist.linear.y << "");
+        // RCLCPP_INFO_ONCE(this->get_logger(), "twist.twist.linear.x: " << twist.twist.linear.x << "twist.twist.linear.y: " << twist.twist.linear.y << "");
 
         field_vel_pub->publish(twist);
     }

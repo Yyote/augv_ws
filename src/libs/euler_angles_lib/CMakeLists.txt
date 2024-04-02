@@ -31,29 +31,30 @@ endif()
 
 set(lib_sources include/euler_angles_lib/euler_angles.hpp src/euler_angles.cpp)
 
-add_library(euler_angles ${lib_sources})
+add_library(euler_angles SHARED ${lib_sources})
 ament_target_dependencies(euler_angles ${deps}) # Добавление зависимостей
 
+ament_export_interfaces(euler_angles HAS_LIBRARY_TARGET)
+ament_export_dependencies(${deps})
 
 include_directories(include)
 
-ament_export_targets(euler_angles HAS_LIBRARY_TARGET)
 
 install(
     DIRECTORY include/${PROJECT_NAME}
     DESTINATION include
 )
 
-install(
-    TARGETS euler_angles
+install(TARGETS euler_angles
     EXPORT euler_angles
-    LIBRARY DESTINATION ${COLCON_GLOBAL_LIB_DESTINATION}
-    ARCHIVE DESTINATION ${COLCON_GLOBAL_LIB_DESTINATION}
-    RUNTIME DESTINATION  ${COLCON_GLOBAL_BIN_DESTINATION}
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION  bin
     INCLUDES DESTINATION include
 )
 
-
+ament_export_include_directories(include)
+ament_export_libraries(euler_angles)
 
 
 ament_package()

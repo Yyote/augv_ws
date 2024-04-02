@@ -131,7 +131,7 @@ class EulerAngles {
     void get_RPY_from_msg_quaternion(geometry_msgs::msg::Quaternion q)
     {
         tf2::Quaternion q_tf;
-        tf2::convert(q, q_tf);
+        tf2::fromMsg(q, q_tf);
 
         q_tf.normalize();
 

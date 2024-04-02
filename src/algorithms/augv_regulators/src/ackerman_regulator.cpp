@@ -29,7 +29,7 @@ class AckermanRegulator : public GroundRegulator
             // twist.twist.angular.z = 0;
             if (twist.twist.linear.x < 0) twist.twist.angular.z = twist.twist.angular.z * -1;
             cmd_vel_pub->publish(twist);
-            // RCLCPP_INFO_STREAM(this->get_logger(), "twist.twist.linear.x = " << twist.twist.linear.x << "\n" << "twist.twist.angular.z = " << twist.twist.angular.z);
+            // RCLCPP_INFO_ONCE(this->get_logger(), "twist.twist.linear.x = " << twist.twist.linear.x << "\n" << "twist.twist.angular.z = " << twist.twist.angular.z);
     }
 
 

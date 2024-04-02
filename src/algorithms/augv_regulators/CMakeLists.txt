@@ -40,17 +40,17 @@ ament_target_dependencies(ackerman_regulator_node ${deps})
 
 install(
   TARGETS ackerman_regulator_node
-  EXPORT ackerman_regulator_node
-  LIBRARY DESTINATION ${COLCON_PACKAGE_LIB_DESTINATION}
-  ARCHIVE DESTINATION ${COLCON_GLOBAL_LIB_DESTINATION}
-  RUNTIME DESTINATION  ${COLCON_GLOBAL_LIB_DESTINATION}
+  # EXPORT ackerman_regulator_node
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION  lib
   INCLUDES DESTINATION include
 )
 
 install(TARGETS ackerman_regulator_node
 DESTINATION lib/${PROJECT_NAME}/)
 
-ament_export_targets(ackerman_regulator_node HAS_LIBRARY_TARGET)
+# ament_export_interfaces(ackerman_regulator_node HAS_LIBRARY_TARGET)
 
 
 
@@ -60,17 +60,17 @@ ament_target_dependencies(tracked_regulator_node ${deps})
 
 install(
   TARGETS tracked_regulator_node
-  EXPORT tracked_regulator_node
-  LIBRARY DESTINATION ${COLCON_PACKAGE_LIB_DESTINATION}
-  ARCHIVE DESTINATION ${COLCON_GLOBAL_LIB_DESTINATION}
-  RUNTIME DESTINATION  ${COLCON_GLOBAL_LIB_DESTINATION}
+  # EXPORT tracked_regulator_node
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION  lib
   INCLUDES DESTINATION include
 )
 
 install(TARGETS tracked_regulator_node
 DESTINATION lib/${PROJECT_NAME}/)
 
-ament_export_targets(tracked_regulator_node HAS_LIBRARY_TARGET)
+# ament_export_interfaces(tracked_regulator_node HAS_LIBRARY_TARGET)
 
 
 
@@ -80,16 +80,16 @@ ament_target_dependencies(omni_regulator_node ${deps})
 
 install(
   TARGETS omni_regulator_node
-  EXPORT omni_regulator_node
-  LIBRARY DESTINATION ${COLCON_PACKAGE_LIB_DESTINATION}
-  ARCHIVE DESTINATION ${COLCON_GLOBAL_LIB_DESTINATION}
-  RUNTIME DESTINATION  ${COLCON_GLOBAL_LIB_DESTINATION}
+  # EXPORT omni_regulator_node
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION  lib
   INCLUDES DESTINATION include
 )
 
 install(TARGETS omni_regulator_node
 DESTINATION lib/${PROJECT_NAME}/)
 
-ament_export_targets(omni_regulator_node HAS_LIBRARY_TARGET)
+# ament_export_interfaces(omni_regulator_node HAS_LIBRARY_TARGET)
 
 ament_package()
