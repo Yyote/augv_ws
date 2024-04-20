@@ -5,34 +5,14 @@ def generate_launch_description():
     ld = LaunchDescription()
     
     robot_types = [
-        'omni',
+        'tracked',
     ]
 
     robot_id = 0
     
     for i in range(len(robot_types)):
         # 2. Регуляторы для машинок
-        if robot_types[i] == 'omni':
-            ld.add_action(actions.Node(
-                package="augv_regulators",
-                executable="omni_regulator_node",
-                namespace=f"robot{robot_id}",
-                parameters=[
-                    {'id': robot_id},
-                ],
-                # emulate_tty=True, output='screen'
-            ))
-        elif robot_types[i] == 'ackerman':
-            ld.add_action(actions.Node(
-                package="augv_regulators",
-                executable="ackerman_regulator_node",
-                namespace=f"robot{robot_id}",
-                parameters=[
-                    {'id': robot_id},
-                ],
-                # emulate_tty=True, output='screen'
-            ))
-        elif robot_types[i] == 'tracked':
+        if robot_types[i] == 'tracked':
             ld.add_action(actions.Node(
                 package="augv_regulators",
                 executable="tracked_regulator_node",
@@ -40,6 +20,9 @@ def generate_launch_description():
                 parameters=[
                     {'id': robot_id},
                 ],
+                remappings=[
+                    ('/odom', '/zed_node/odom')
+                ]
                 # emulate_tty=True, output='screen'
             ))
         else:
