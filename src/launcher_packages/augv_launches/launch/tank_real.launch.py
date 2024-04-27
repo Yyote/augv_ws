@@ -21,7 +21,8 @@ def generate_launch_description():
                     {'id': robot_id},
                 ],
                 remappings=[
-                    ('/odom', '/zed_node/odom')
+                    ('/odom', '/zed_node/odom'),
+                    ('/pose', '/zed_node/pose')
                 ]
                 # emulate_tty=True, output='screen'
             ))
