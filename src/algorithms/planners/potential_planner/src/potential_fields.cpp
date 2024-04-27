@@ -116,7 +116,7 @@ class FieldsNode : public rclcpp::Node
         sensor_msgs::msg::PointCloud pc;
 
         geometry_msgs::msg::TwistStamped twist;
-        twist.header.frame_id = "laser";
+        twist.header.frame_id = scan->header.frame_id;
         twist.header.stamp = this->get_clock()->now();
 
         twist.twist.linear.x = 0;

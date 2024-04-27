@@ -8,6 +8,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
+#include "geometry_msgs/msg/twist.hpp"
 // #include "visualization_msgs/msg/marker.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 #include "augv_navigation_msgs/msg/position.hpp"
@@ -119,7 +120,7 @@ class GroundRegulator : public rclcpp::Node
         std::string goal_topic = robot_ns + "/goal";
         goal_sub = this->create_subscription<augv_navigation_msgs::msg::Position>(goal_topic, 10, std::bind(&GroundRegulator::goal_cb, this, _1)); 
         std::string cmd_vel_topic = robot_ns + "/cmd_vel";
-        cmd_vel_pub = this->create_publisher<geometry_msgs::msg::TwistStamped>(cmd_vel_topic, 10);
+        cmd_vel_pub = this->create_publisher<geometry_msgs::msg::Twist>(cmd_vel_topic, 10);
         arrow_pub = this->create_publisher<visualization_msgs::msg::Marker>("/robot" + std::to_string(this->id_) + "/goal_arrow", 10);
     }
 

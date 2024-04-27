@@ -21,13 +21,12 @@ class AckermanRegulator : public GroundRegulator
 
     void logic(float yaw_singal, float x_signal, float y_signal, float z_signal) override
     {
-            geometry_msgs::msg::TwistStamped twist;
-            twist.header.stamp = this->get_clock()->now();
-            twist.twist.linear.x = x_signal + field_vel.twist.linear.x / 6;
-            // twist.twist.linear.x = 0;
-            twist.twist.angular.z = yaw_singal + field_vel.twist.angular.z / 15.5;
-            // twist.twist.angular.z = 0;
-            if (twist.twist.linear.x < 0) twist.twist.angular.z = twist.twist.angular.z * -1;
+            geometry_msgs::msg::Twist twist;
+            twist.linear.x = x_signal + field_vel.twist.linear.x / 6;
+            // twist.linear.x = 0;
+            twist.angular.z = yaw_singal + field_vel.twist.angular.z / 15.5;
+            // twist.angular.z = 0;
+            if (twist.linear.x < 0) twist.angular.z = twist.angular.z * -1;
             cmd_vel_pub->publish(twist);
             // RCLCPP_INFO_STREAM(this->get_logger(), "twist.twist.linear.x = " << twist.twist.linear.x << "\n" << "twist.twist.angular.z = " << twist.twist.angular.z);
     }
