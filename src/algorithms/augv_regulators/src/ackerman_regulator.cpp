@@ -19,7 +19,7 @@ class AckermanRegulator : public GroundRegulator
     rclcpp::Publisher<augv_navigation_msgs::msg::Position>::SharedPtr goal_pub;
     geometry_msgs::msg::TwistStamped field_vel;
 
-    void logic(float yaw_singal, float x_signal, float y_signal, float z_signal) override
+    geometry_msgs::msg::Twist logic(float yaw_singal, float x_signal, float y_signal, float z_signal) override
     {
             geometry_msgs::msg::Twist twist;
             twist.linear.x = x_signal + field_vel.twist.linear.x / 6;
@@ -27,7 +27,8 @@ class AckermanRegulator : public GroundRegulator
             twist.angular.z = yaw_singal + field_vel.twist.angular.z / 15.5;
             // twist.angular.z = 0;
             if (twist.linear.x < 0) twist.angular.z = twist.angular.z * -1;
-            cmd_vel_pub->publish(twist);
+            // cmd_vel_pub->publish(twist);
+            return twist;
             // RCLCPP_INFO_STREAM(this->get_logger(), "twist.twist.linear.x = " << twist.twist.linear.x << "\n" << "twist.twist.angular.z = " << twist.twist.angular.z);
     }
 

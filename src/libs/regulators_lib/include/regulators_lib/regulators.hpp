@@ -21,7 +21,11 @@ using std::placeholders::_1;
 class GroundRegulator;
 class PID;
 
-
+float sgn(float num)
+{
+    if (num >= 0) return 1;
+    else return -1;
+}
 
 
 class PID
@@ -129,7 +133,7 @@ class GroundRegulator : public rclcpp::Node
     rclcpp::Subscription<augv_navigation_msgs::msg::Position>::SharedPtr goal_sub; // regulators.hpp::GroundRegulator
 
 
-    virtual void logic(float yaw_singal, float x_signal, float y_signal, float z_signal) = 0;
+    virtual geometry_msgs::msg::Twist logic(float yaw_singal, float x_signal, float y_signal, float z_signal) = 0;
 
 
     virtual void pose_cb(const geometry_msgs::msg::PoseStamped::SharedPtr pose_msg)
@@ -190,7 +194,13 @@ class GroundRegulator : public rclcpp::Node
             float y_sig = y_regulator.pid(dy, dt);
             float z_sig = z_regulator.pid(dz, dt);
             float yaw_sig = yaw_regulator.pid(dyaw, dt);
-            logic(yaw_sig, x_sig, y_sig, z_sig);
+            geometry_msgs::msg::Twist pid_result = logic(yaw_sig, x_sig, y_sig, z_sig);
+            if (abs(pid_result.linear.x) > 0.3) pid_result.linear.x = 0.3 * sgn(pid_result.linear.x);
+            if (abs(pid_result.linear.y) > 0.3) pid_result.linear.y = 0.3 * sgn(pid_result.linear.y);
+            if (abs(pid_result.linear.z) > 0.3) pid_result.linear.z = 0.3 * sgn(pid_result.linear.z);
+            if (abs(pid_result.angular.z) > 0.3) pid_result.angular.z = 0.3 * sgn(pid_result.angular.z);
+
+            cmd_vel_pub->publish(pid_result);
         }
         last_time = now;
     }
