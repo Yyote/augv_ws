@@ -126,55 +126,58 @@ class FieldsNode : public rclcpp::Node
 
         for (int i = 0; i < scan->ranges.size(); ++i)
         {
-            geometry_msgs::msg::Point32 point;
-
-            double alpha_0 = 0;
-
-            if (std::isfinite(scan->ranges.at(i)) < rmax1)
+            if (scan->ranges.at(i) > 0 and !isnan(scan->ranges.at(i)))
             {
-                if (scan->ranges.at(i) < rmax1 and scan->ranges.at(i) >= rmax2)
+                geometry_msgs::msg::Point32 point;
+
+                double alpha_0 = 0;
+
+                if (std::isfinite(scan->ranges.at(i)) < rmax1)
                 {
-                    double alpha_scan = scan->angle_increment * i + alpha_0;
-                    point.x = scan->ranges.at(i) * cos(alpha_scan);
-                    point.y = scan->ranges.at(i) * sin(alpha_scan);
+                    if (scan->ranges.at(i) < rmax1 and scan->ranges.at(i) >= rmax2)
+                    {
+                        double alpha_scan = scan->angle_increment * i + alpha_0;
+                        point.x = scan->ranges.at(i) * cos(alpha_scan);
+                        point.y = scan->ranges.at(i) * sin(alpha_scan);
 
-                    double dr = scan->ranges.at(i);
+                        double dr = scan->ranges.at(i);
 
-                    twist.twist.linear.x += (1.0 / 2.0) * k1 * local_koeff * pow(1.0 / dr - 1.0 / rmax1, 2) * cos(alpha_scan);
-                    twist.twist.linear.y += (1.0 / 2.0) * k1 * local_koeff * pow(1.0 / dr - 1.0 / rmax1, 2) * sin(alpha_scan);
+                        twist.twist.linear.x += (1.0 / 2.0) * k1 * local_koeff * pow(1.0 / dr - 1.0 / rmax1, 2) * cos(alpha_scan);
+                        twist.twist.linear.y += (1.0 / 2.0) * k1 * local_koeff * pow(1.0 / dr - 1.0 / rmax1, 2) * sin(alpha_scan);
+                    }
+                    else if (scan->ranges.at(i) < rmax2 and scan->ranges.at(i) >= rmax3)
+                    {
+                        double alpha_scan = scan->angle_increment * i + alpha_0;
+                        point.x = scan->ranges.at(i) * cos(alpha_scan);
+                        point.y = scan->ranges.at(i) * sin(alpha_scan);
+
+                        double dr = scan->ranges.at(i);
+
+                        twist.twist.linear.x += (1.0 / 2.0) * k2 * local_koeff * pow(1.0 / dr - 1.0 / rmax1, 2) * cos(alpha_scan);
+                        twist.twist.linear.y += (1.0 / 2.0) * k2 * local_koeff * pow(1.0 / dr - 1.0 / rmax1, 2) * sin(alpha_scan);
+                    }
+                    else if (scan->ranges.at(i) < rmax3)
+                    {
+                        double alpha_scan = scan->angle_increment * i + alpha_0;
+                        point.x = scan->ranges.at(i) * cos(alpha_scan);
+                        point.y = scan->ranges.at(i) * sin(alpha_scan);
+                        
+                        double dr = scan->ranges.at(i);
+
+                        twist.twist.linear.x += (1.0 / 2.0) * k3 * local_koeff * pow(1.0 / dr - 1.0 / rmax1, 2) * cos(alpha_scan);
+                        twist.twist.linear.y += (1.0 / 2.0) * k3 * local_koeff * pow(1.0 / dr - 1.0 / rmax1, 2) * sin(alpha_scan);
+                    }
                 }
-                else if (scan->ranges.at(i) < rmax2 and scan->ranges.at(i) >= rmax3)
+                else
                 {
-                    double alpha_scan = scan->angle_increment * i + alpha_0;
-                    point.x = scan->ranges.at(i) * cos(alpha_scan);
-                    point.y = scan->ranges.at(i) * sin(alpha_scan);
-
-                    double dr = scan->ranges.at(i);
-
-                    twist.twist.linear.x += (1.0 / 2.0) * k2 * local_koeff * pow(1.0 / dr - 1.0 / rmax1, 2) * cos(alpha_scan);
-                    twist.twist.linear.y += (1.0 / 2.0) * k2 * local_koeff * pow(1.0 / dr - 1.0 / rmax1, 2) * sin(alpha_scan);
+                    double alpha = scan->angle_increment * i + alpha_0;
+                    point.x = 10 * cos(alpha);;
+                    point.y = 10 * sin(alpha);;
                 }
-                else if (scan->ranges.at(i) < rmax3)
-                {
-                    double alpha_scan = scan->angle_increment * i + alpha_0;
-                    point.x = scan->ranges.at(i) * cos(alpha_scan);
-                    point.y = scan->ranges.at(i) * sin(alpha_scan);
-                    
-                    double dr = scan->ranges.at(i);
-
-                    twist.twist.linear.x += (1.0 / 2.0) * k3 * local_koeff * pow(1.0 / dr - 1.0 / rmax1, 2) * cos(alpha_scan);
-                    twist.twist.linear.y += (1.0 / 2.0) * k3 * local_koeff * pow(1.0 / dr - 1.0 / rmax1, 2) * sin(alpha_scan);
-                }
+                // ROS_INFO_STREAM("Point x = " << point.x);
+                // ROS_INFO_STREAM("Point y = " << point.y);
+                pc.points.push_back(point);
             }
-            else
-            {
-                double alpha = scan->angle_increment * i + alpha_0;
-                point.x = 10 * cos(alpha);;
-                point.y = 10 * sin(alpha);;
-            }
-            // ROS_INFO_STREAM("Point x = " << point.x);
-            // ROS_INFO_STREAM("Point y = " << point.y);
-            pc.points.push_back(point);
         }
 
         EulerAngles angles;
