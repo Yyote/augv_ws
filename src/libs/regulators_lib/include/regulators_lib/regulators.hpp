@@ -216,7 +216,7 @@ class GroundRegulator : public rclcpp::Node
     rclcpp::Time last_time; // regulators.hpp::GroundRegulator
     int  id_; // regulators.hpp::GroundRegulator
     std::string robot_ns; // regulators.hpp::GroundRegulator
-    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr cmd_vel_pub; // regulators.hpp::GroundRegulator
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub; // regulators.hpp::GroundRegulator
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr arrow_pub;
     augv_navigation_msgs::msg::Position current_goal; // regulators.hpp::GroundRegulator
     bool got_goal_at_least_once = false; // regulators.hpp::GroundRegulator
