@@ -21,8 +21,8 @@ def generate_launch_description():
                     {'id': robot_id},
                 ],
                 remappings=[
-                    ('/odom', '/zed_node/odom'),
-                    ('/pose', '/zed_node/pose')
+                    (f'/robot{i}/odom', f'/robot{i}/zed_node/odom'),
+                    (f'/robot{i}/pose', f'/robot{i}/zed_node/pose')
                 ]
                 # emulate_tty=True, output='screen'
             ))
@@ -39,7 +39,11 @@ def generate_launch_description():
                     {'id': robot_id},
                 ],
                 # emulate_tty=True,
-                # output="screen"
+                # output="screen"\
+                remappings=[
+                    (f'/robot{i}/odom', f'/robot{i}/zed_node/odom'),
+                    (f'/robot{i}/pose', f'/robot{i}/zed_node/pose')
+                ]
             )
         )
         
@@ -54,6 +58,10 @@ def generate_launch_description():
                 ],
                 # emulate_tty=True,
                 # output="screen"
+                remappings=[
+                    (f'/robot{i}/odom', f'/robot{i}/zed_node/odom'),
+                    (f'/robot{i}/pose', f'/robot{i}/zed_node/pose')
+                ]
             )
         )
 
@@ -68,6 +76,10 @@ def generate_launch_description():
                 ],
                 # emulate_tty=True,
                 # output="screen"
+                remappings=[
+                    (f'/robot{i}/odom', f'/robot{i}/zed_node/odom'),
+                    (f'/robot{i}/pose', f'/robot{i}/zed_node/pose')
+                ]
             )
         )
 
