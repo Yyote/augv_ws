@@ -234,30 +234,30 @@ int main(int argc, char **argv)
 
     node->declare_parameter("id", 1);
 
-    node->declare_parameter("rmax1", 1);
-    node->declare_parameter("rmax2", 1);
-    node->declare_parameter("rmax3", 1);
-    node->declare_parameter("k1", 1);
-    node->declare_parameter("k2", 1);
-    node->declare_parameter("k3", 1);
+    node->declare_parameter("rmax1", 1.0);
+    node->declare_parameter("rmax2", 1.0);
+    node->declare_parameter("rmax3", 1.0);
+    node->declare_parameter("k1", 1.0);
+    node->declare_parameter("k2", 1.0);
+    node->declare_parameter("k3", 1.0);
 
     double k1 = 0.01;
     double k2 = 0.021;
     double k3 = 0.038;
-    double rmax1 = 3;
-    double rmax2 = 1;
+    double rmax1 = 3.0;
+    double rmax2 = 1.0;
     double rmax3 = 0.5;
 
     int id = 0;
     int default_id = 1;
 
     node->get_parameter_or("id", id, default_id);
-    node->get_parameter_or("rmax1", k1, k1);
-    node->get_parameter_or("rmax2", k2, k2);
-    node->get_parameter_or("rmax3", k3, k3);
-    node->get_parameter_or("k1", rmax1, rmax1);
-    node->get_parameter_or("k2", rmax2, rmax2);
-    node->get_parameter_or("k3", rmax3, rmax3);
+    node->get_parameter_or("rmax1", rmax1, rmax1);
+    node->get_parameter_or("rmax2", rmax2, rmax2);
+    node->get_parameter_or("rmax3", rmax3, rmax3);
+    node->get_parameter_or("k1", k1, k1);
+    node->get_parameter_or("k2", k2, k2);
+    node->get_parameter_or("k3", k3, k3);
 
     node->init(id, rmax1, rmax2, rmax3, k1, k2, k3);
 
