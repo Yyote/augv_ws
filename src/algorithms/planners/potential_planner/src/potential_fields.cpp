@@ -15,14 +15,6 @@
 using std::placeholders::_1;
 
 
-double k1 = 0.004 * 2.5;
-double k2 = 0.007 * 3;
-double k3 = 0.010 * 3.8;
-double rmax1 = 3.8;
-double rmax2 = 3;
-double rmax3 = 1.5;
-
-
 nav_msgs::msg::Odometry global_odom;
 
 bool trajectory_is_sent = 0;
@@ -99,8 +91,15 @@ class FieldsNode : public rclcpp::Node
     }
 
 
-    void init(int id)
+    void init(int id, double rmax1, double rmax2, double rmax3, double k1, double k2, double k3)
     {
+        this->k1 = k1;
+        this->k2 = k2;
+        this->k3 = k3;
+        this->rmax1 = rmax1;
+        this->rmax2 = rmax2;
+        this->rmax3 = rmax3;
+        
         std::string local_namespace = "/robot" + std::to_string(id);
         std::string topic = local_namespace + "/scan";
         RCLCPP_INFO_STREAM(this->get_logger(), "Topic = " << topic);
@@ -111,6 +110,15 @@ class FieldsNode : public rclcpp::Node
 
 
     private:
+    double k1 = 0.004 * 2.5;
+    double k2 = 0.007 * 3;
+    double k3 = 0.010 * 3.8;
+    double rmax1 = 3.8;
+    double rmax2 = 3;
+    double rmax3 = 1.5;
+
+
+
     void laser_scan_cb(const sensor_msgs::msg::LaserScan::SharedPtr scan)
     {
         sensor_msgs::msg::PointCloud pc;
@@ -132,7 +140,7 @@ class FieldsNode : public rclcpp::Node
 
                 double alpha_0 = 0;
 
-                if (std::isfinite(scan->ranges.at(i)) < rmax1)
+                if (std::isfinite(scan->ranges.at(i)))
                 {
                     if (scan->ranges.at(i) < rmax1 and scan->ranges.at(i) >= rmax2)
                     {
@@ -225,11 +233,33 @@ int main(int argc, char **argv)
     auto node = std::make_shared<FieldsNode>();
 
     node->declare_parameter("id", 1);
+
+    node->declare_parameter("rmax1", 1);
+    node->declare_parameter("rmax2", 1);
+    node->declare_parameter("rmax3", 1);
+    node->declare_parameter("k1", 1);
+    node->declare_parameter("k2", 1);
+    node->declare_parameter("k3", 1);
+
+    double k1 = 0.01;
+    double k2 = 0.021;
+    double k3 = 0.038;
+    double rmax1 = 3;
+    double rmax2 = 1;
+    double rmax3 = 0.5;
+
     int id = 0;
     int default_id = 1;
-    node->get_parameter_or("id", id, default_id);
 
-    node->init(id);
+    node->get_parameter_or("id", id, default_id);
+    node->get_parameter_or("rmax1", k1, k1);
+    node->get_parameter_or("rmax2", k2, k2);
+    node->get_parameter_or("rmax3", k3, k3);
+    node->get_parameter_or("k1", rmax1, rmax1);
+    node->get_parameter_or("k2", rmax2, rmax2);
+    node->get_parameter_or("k3", rmax3, rmax3);
+
+    node->init(id, rmax1, rmax2, rmax3, k1, k2, k3);
 
     rclcpp::spin(node);
     rclcpp::shutdown();

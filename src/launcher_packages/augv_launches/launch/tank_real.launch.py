@@ -37,6 +37,12 @@ def generate_launch_description():
                 namespace=f"robot{robot_id}",
                 parameters=[
                     {'id': robot_id},
+                    {'k1': 0.04},
+                    {'k2': 0.08},
+                    {'k3': 0.2},
+                    {'rmax1': 3},
+                    {'rmax2': 1},
+                    {'rmax3': 0.5},
                 ],
                 # emulate_tty=True,
                 # output="screen"\
