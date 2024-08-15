@@ -16,6 +16,7 @@
   <depend>augv_navigation_msgs</depend>
   <depend>euler_angles_lib</depend>
   <depend>visualization_msgs</depend>
+  <depend>nav_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

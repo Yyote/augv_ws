@@ -9,6 +9,7 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 // #include "visualization_msgs/msg/marker.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 #include "augv_navigation_msgs/msg/position.hpp"
@@ -113,14 +114,31 @@ class GroundRegulator : public rclcpp::Node
         this->declare_parameter("id", default_id);
         this->get_parameter_or("id", id, default_id);
 
+        float default_max_linear_speed = 0.1;
+        float max_linear_speed = default_max_linear_speed;
+        this->declare_parameter("max_linear_speed", default_max_linear_speed);
+        this->get_parameter_or("max_linear_speed", max_linear_speed, default_max_linear_speed);
+
+        float default_max_angular_speed = 0.1;
+        float max_angular_speed = default_max_angular_speed;
+        this->declare_parameter("max_angular_speed", default_max_angular_speed);
+        this->get_parameter_or("max_angular_speed", max_angular_speed, default_max_angular_speed);
+
         id_ = id;
 
         std::string defualt_robot_ns = "/robot" + std::to_string(id);
         this->declare_parameter("robot_ns", defualt_robot_ns);
         this->get_parameter_or("robot_ns", robot_ns, defualt_robot_ns);
 
+        std::string default_odom_prefix = "";
+        std::string odom_prefix = "";
+        this->declare_parameter("odom_prefix", default_odom_prefix);
+        this->get_parameter_or("odom_prefix", odom_prefix, default_odom_prefix);
+
         std::string pose_topic = robot_ns + "/pose";
         pose_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>(pose_topic, 10, std::bind(&GroundRegulator::pose_cb, this, _1)); 
+        std::string odom_topic = robot_ns + odom_prefix + "/odom";
+        odom_sub = this->create_subscription<nav_msgs::msg::Odometry>(odom_topic, 10, std::bind(&GroundRegulator::odom_cb, this, _1)); 
         std::string goal_topic = robot_ns + "/goal";
         goal_sub = this->create_subscription<augv_navigation_msgs::msg::Position>(goal_topic, 10, std::bind(&GroundRegulator::goal_cb, this, _1)); 
         std::string cmd_vel_topic = robot_ns + "/cmd_vel";
@@ -130,6 +148,7 @@ class GroundRegulator : public rclcpp::Node
 
     private:
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub; // regulators.hpp::GroundRegulator
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub; // regulators.hpp::GroundRegulator
     rclcpp::Subscription<augv_navigation_msgs::msg::Position>::SharedPtr goal_sub; // regulators.hpp::GroundRegulator
 
 
@@ -195,15 +214,89 @@ class GroundRegulator : public rclcpp::Node
             float z_sig = z_regulator.pid(dz, dt);
             float yaw_sig = yaw_regulator.pid(dyaw, dt);
             geometry_msgs::msg::Twist pid_result = logic(yaw_sig, x_sig, y_sig, z_sig);
-            if (abs(pid_result.linear.x) > 0.3) pid_result.linear.x = 0.3 * sgn(pid_result.linear.x);
-            if (abs(pid_result.linear.y) > 0.3) pid_result.linear.y = 0.3 * sgn(pid_result.linear.y);
-            if (abs(pid_result.linear.z) > 0.3) pid_result.linear.z = 0.3 * sgn(pid_result.linear.z);
-            if (abs(pid_result.angular.z) > 0.3) pid_result.angular.z = 0.3 * sgn(pid_result.angular.z);
+            if (abs(pid_result.linear.x) > max_linear_speed) pid_result.linear.x = max_linear_speed * sgn(pid_result.linear.x);
+            if (abs(pid_result.linear.y) > max_linear_speed) pid_result.linear.y = max_linear_speed * sgn(pid_result.linear.y);
+            if (abs(pid_result.linear.z) > max_linear_speed) pid_result.linear.z = max_linear_speed * sgn(pid_result.linear.z);
+            if (abs(pid_result.angular.z) > max_angular_speed) pid_result.angular.z = max_angular_speed * sgn(pid_result.angular.z);
 
             cmd_vel_pub->publish(pid_result);
         }
         last_time = now;
     }
+
+
+    virtual void odom_cb(const nav_msgs::msg::Odometry::SharedPtr odom_msg)
+    {
+        geometry_msgs::msg::PoseStamped::SharedPtr pose_msg = std::make_shared<geometry_msgs::msg::PoseStamped>();
+        pose_msg->header = odom_msg->header;
+        pose_msg->pose = odom_msg->pose.pose;
+        rclcpp::Time now = this->get_clock()->now();
+        EulerAngles ea;
+        // curr_orientation = ea.yaw();
+        if (got_goal_at_least_once)
+        {
+            ea.get_RPY_from_msg_quaternion(pose_msg->pose.orientation);
+            curr_orientation = ea.yaw();
+            float dyaw = current_goal.course - ea.yaw();
+            float dx = current_goal.position.x - pose_msg->pose.position.x;
+            float dy = current_goal.position.y - pose_msg->pose.position.y;
+            float dz = current_goal.position.z - pose_msg->pose.position.z;
+
+            auto xy = ea.rotate_vector_by_angle(dx, dy, -curr_orientation);
+            dx = xy.at(0);
+            dy = xy.at(1);
+
+            // float dyaw = atan2(dy, dx);
+            dyaw = atan2f(dy, dx);
+            // dyaw = ea.normalize_angle(dyaw);
+
+            // auto xy = ea.rotate_vector_by_angle(dx, dy, curr_orientation);
+            // dx = xy[0];
+            // dy = xy[1];
+
+            float dt = (now - last_time).nanoseconds() / 1e9;
+
+            ea.setRPY(0, 0, dyaw);
+
+            visualization_msgs::msg::Marker dmarker;
+            dmarker.header.frame_id = "robot" + std::to_string(this->id_) + "/base_link";
+            dmarker.header.stamp = this->get_clock()->now();
+            dmarker.id = 0;
+            dmarker.type = visualization_msgs::msg::Marker::ARROW;
+            dmarker.action = visualization_msgs::msg::Marker::ADD;
+            dmarker.pose.position.x = 0;
+            dmarker.pose.position.y = 0;
+            dmarker.pose.position.z = 0;
+            dmarker.pose.orientation = ea.get_current_msg_quaternion();
+            dmarker.scale.x = 1;
+            dmarker.scale.y = 0.1;
+            dmarker.scale.z = 0.1;
+            dmarker.color.a = 1.0; // Don't forget to set the alpha!
+            dmarker.color.r = 0.0;
+            dmarker.color.g = 1.0;
+            dmarker.color.b = 0.0;
+            arrow_pub->publish(dmarker);
+
+            // std::cout   << "dx = " << dx << "\n"
+            //             << "dy = " << dy << "\n"
+            //             << "dz = " << dz << "\n"
+            //             << "dyaw = " << dyaw << "\n";
+
+            float x_sig = x_regulator.pid(dx, dt);
+            float y_sig = y_regulator.pid(dy, dt);
+            float z_sig = z_regulator.pid(dz, dt);
+            float yaw_sig = yaw_regulator.pid(dyaw, dt);
+            geometry_msgs::msg::Twist pid_result = logic(yaw_sig, x_sig, y_sig, z_sig);
+            if (abs(pid_result.linear.x) > max_linear_speed) pid_result.linear.x = max_linear_speed * sgn(pid_result.linear.x);
+            if (abs(pid_result.linear.y) > max_linear_speed) pid_result.linear.y = max_linear_speed * sgn(pid_result.linear.y);
+            if (abs(pid_result.linear.z) > max_linear_speed) pid_result.linear.z = max_linear_speed * sgn(pid_result.linear.z);
+            if (abs(pid_result.angular.z) > max_angular_speed) pid_result.angular.z = max_angular_speed * sgn(pid_result.angular.z);
+
+            cmd_vel_pub->publish(pid_result);
+        }
+        last_time = now;
+    }
+
 
 
     void goal_cb(const augv_navigation_msgs::msg::Position::SharedPtr goal_msg)
@@ -233,6 +326,9 @@ class GroundRegulator : public rclcpp::Node
     std::vector<float> rot_errs; // regulators.hpp::GroundRegulator
     std::vector<float> x_errs; // regulators.hpp::GroundRegulator
     std::vector<float> y_errs; // regulators.hpp::GroundRegulator
+    float max_linear_speed;
+    float max_angular_speed;
+
 
     PID x_regulator;
     PID y_regulator;

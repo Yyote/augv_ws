@@ -3,6 +3,7 @@ from rclpy.node import Node
 
 from astar_planner_msgs.msg import GlobalTrajectory
 from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry
 from augv_navigation_msgs.msg import Position
 
 def try_get(fn, default):
@@ -21,10 +22,13 @@ class AutopilotLiteNode(Node):
     def __init__(self):
         super().__init__('autopilot_lite_node', allow_undeclared_parameters=True, automatically_declare_parameters_from_overrides=True)
         self.robot_id = try_get(lambda: self.get_parameter("id"), 1)
-        self.sub_trajectory = self.create_subscription(GlobalTrajectory, f'/robot{self.robot_id}/trajectory', self.trajectory_cb, 10)
-        self.sub_pose = self.create_subscription(PoseStamped, f'/robot{self.robot_id}/pose', self.pose_cb, 10)
+        self.robot_name = try_get(lambda: self.get_parameter("name"), "robot")
+        self.odom_prefix = try_get(lambda: self.get_parameter("odom_prefix"), "")
+        self.sub_trajectory = self.create_subscription(GlobalTrajectory, f'/{self.robot_name}{self.robot_id}/trajectory', self.trajectory_cb, 10)
+        self.sub_pose = self.create_subscription(PoseStamped, f'/{self.robot_name}{self.robot_id}/pose', self.pose_cb, 10)
+        self.sub_odom = self.create_subscription(Odometry, f'/{self.robot_name}{self.robot_id}{self.odom_prefix}/odom', self.odom_cb, 10)
         
-        self.goal_pub = self.create_publisher(PoseStamped, f'/robot{self.robot_id}/goal_pose', 10)
+        self.goal_pub = self.create_publisher(PoseStamped, f'/{self.robot_name}{self.robot_id}/goal_pose', 10)
         timer_period = 0.5  # seconds
         self.timer = self.create_timer(timer_period, self.timer_cb)
         self.curr_wp = None
@@ -36,6 +40,12 @@ class AutopilotLiteNode(Node):
         self.current_trajectory = trajectory.waypoints
     
     def pose_cb(self, pose: PoseStamped):
+        self.current_pose = pose
+    
+    def odom_cb(self, odom: Odometry):
+        pose = PoseStamped()
+        pose.pose = odom.pose
+        pose.header = odom.header
         self.current_pose = pose
 
     def timer_cb(self):

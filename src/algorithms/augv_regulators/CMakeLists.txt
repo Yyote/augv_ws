@@ -15,11 +15,12 @@ find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(augv_navigation_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
-set(deps ament_cmake rclcpp regulators_lib geometry_msgs euler_angles_lib augv_navigation_msgs tf2_geometry_msgs tf2 visualization_msgs)
+set(deps nav_msgs ament_cmake rclcpp regulators_lib geometry_msgs euler_angles_lib augv_navigation_msgs tf2_geometry_msgs tf2 visualization_msgs)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
